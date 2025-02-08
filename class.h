@@ -35,7 +35,6 @@ typedef struct constant_class_info_t {
 //u2 name_and_type_index;
 //}
 typedef struct constant_method_ref_info_t {
-    uint16_t name_index;
     uint16_t class_index;
     uint16_t name_and_type_index;
 } constant_method_ref_info_t;

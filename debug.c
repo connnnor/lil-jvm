@@ -11,18 +11,16 @@ void dump_constant_pool(uint16_t count, constant_pool_t *cp) {
                 printf("%s ", cp[i].info.utf8_info.bytes);
                 break;
             case CONSTANT_CLASS:
-                printf("Class");
-//                read_bytes(&constant_pool[i].info.class_info.name_index, 2);
+                printf("%-20s ", "Class");
+                printf("#%d", cp[i].info.class_info.name_index);
                 break;
             case CONSTANT_METHOD_REF:
-                printf("Methodref");
-//                read_bytes(&constant_pool[i].info.method_ref_info.class_index, 2);
-//                read_bytes(&constant_pool[i].info.method_ref_info.name_and_type_index, 2);
+                printf("%-20s ", "Methodref");
+                printf("#%d.#%d", cp[i].info.method_ref_info.class_index, cp[i].info.method_ref_info.name_and_type_index);
                 break;
             case CONSTANT_NAME_AND_TYPE:
-                printf("NameAndType");
-//                read_bytes(&constant_pool[i].info.name_and_type_info.name_index, 2);
-//                read_bytes(&constant_pool[i].info.name_and_type_info.descriptor_index, 2);
+                printf("%-20s ", "NameAndType");
+                printf("#%d:#%d", cp[i].info.name_and_type_info.name_index, cp[i].info.name_and_type_info.descriptor_index);
                 break;
             default:
                 printf("Unknown tag 0x%02d", cp[i].tag);
