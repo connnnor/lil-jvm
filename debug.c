@@ -1,7 +1,34 @@
 #include "debug.h"
 
-void dump_constant_pool(uint16_t count, constant_pool_t **constant_pool) {
+void dump_constant_pool(uint16_t count, constant_pool_t *cp) {
     printf("Constant Pool:\n");
+    for (uint16_t i = 0; i < count - 1; i++) {
+        printf("  #%02u = ", i + 1);
+        switch (cp[i].tag) {
+            case CONSTANT_UTF8:
+                printf("%-20s ", "Utf8");
+                // FIXME - should probably do something if this string is long like a "..."
+                printf("%s ", cp[i].info.utf8_info.bytes);
+                break;
+            case CONSTANT_CLASS:
+                printf("Class");
+//                read_bytes(&constant_pool[i].info.class_info.name_index, 2);
+                break;
+            case CONSTANT_METHOD_REF:
+                printf("Methodref");
+//                read_bytes(&constant_pool[i].info.method_ref_info.class_index, 2);
+//                read_bytes(&constant_pool[i].info.method_ref_info.name_and_type_index, 2);
+                break;
+            case CONSTANT_NAME_AND_TYPE:
+                printf("NameAndType");
+//                read_bytes(&constant_pool[i].info.name_and_type_info.name_index, 2);
+//                read_bytes(&constant_pool[i].info.name_and_type_info.descriptor_index, 2);
+                break;
+            default:
+                printf("Unknown tag 0x%02d", cp[i].tag);
+        }
+        printf("\n");
+    }
 }
 
 void dump_interfaces(uint16_t count, interface_t **interfaces) {
