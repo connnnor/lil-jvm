@@ -1,7 +1,12 @@
 #include "loader.h"
 #include <stdio.h>
 #include "memory.h"
+#include "debug.h"
 
+#define DEBUG 1
+
+#define debug_print(fmt, ...) \
+            do { if (DEBUG) fprintf(stderr, fmt, __VA_ARGS__); } while (0)
 
 char * get_constant_utf8(class_file_t *cf, uint16_t index) {
     constant_tag_t tag = cf->constant_pool[index - 1].tag;
@@ -106,31 +111,46 @@ attribute_tag_t get_attribute_tag(char *str) {
     return ATTR_UNKNOWN;
 }
 
+attr_code_t *read_attribute_code() {
+    attr_code_t *a = ALLOCATE(attr_code_t, 1);
+    read_bytes(&a->max_stack, 2);
+    read_bytes(&a->max_stack, 2);
+    return a;
+}
+
 void read_attributes(class_file_t *cf, uint16_t count, attribute_t **attributes) {
     if (count == 0) {
         return;
     }
     attribute_t *a = ALLOCATE(attribute_t, count);
     for (uint16_t i = 0; i < count; i++) {
-        uint16_t name_index = read_word();
-        a[i].name_index = name_index;
+        read_bytes(&a[i].name_index, 2);
+        debug_print("Processing Attribute %s\n", get_constant_utf8(cf, a[i].name_index));
+
         // lookup name in constant pool and map to tag
-        char *name = get_constant_utf8(cf, name_index);
+        char *name = get_constant_utf8(cf, a[i].name_index);
         attribute_tag_t tag = get_attribute_tag(name);
-//        switch(tag) {
-//            case ATTR_CODE:
-//                break;
-//            case ATTR_CODE:
-//                break;
-//        }
-        // FIXME - current spot
 
         read_bytes(&a[i].attribute_length, 4);
+        switch (tag) {
+            case ATTR_CODE:
+                a[i].info.attr_code = read_attribute_code();
+                current -= 4;
+                break;
+            case ATTR_SOURCE_FILE:
+                break;
+            case ATTR_LINE_NUM_TABLE:
+                break;
+            case ATTR_UNKNOWN:
+            default:
+                printf("Error: Unknown tag 0x%02d for attribute with name %s", tag, name);
+                exit(-1);
+        }
        // copy info byte array
        // a[i].in
-        a[i].info = ALLOCATE(uint8_t, a[i].attribute_length);
-        memcpy(a[i].info, current, a[i].attribute_length);
-        current += a[i].attribute_length;
+        // a[i].info = ALLOCATE(uint8_t, a[i].attribute_length);
+        // memcpy(a[i].info, current, a[i].attribute_length);
+        // current += a[i].attribute_length;
     }
     *attributes = a;
 }
@@ -157,8 +177,9 @@ void read_methods(class_file_t *cf, uint16_t count, method_t **methods) {
     }
     method_t *m = ALLOCATE(method_t, count);
     for (uint16_t i = 0; i < count; i++) {
-         read_bytes(&m[i].access_flags, 2);
+        read_bytes(&m[i].access_flags, 2);
         read_bytes(&m[i].name_index, 2);
+        debug_print("Processing Method %s\n", get_constant_utf8(cf, m[i].name_index));
         read_bytes(&m[i].descriptor_index, 2);
         read_bytes(&m[i].attribute_count, 2);
         read_attributes(cf, m[i].attribute_count, &m[i].attributes);

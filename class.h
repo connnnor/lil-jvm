@@ -70,6 +70,7 @@ typedef enum attribute_tag_t {
     ATTR_NEST_HOST,
     ATTR_NEST_MEMBERS,
     ATTR_SOURCE_FILE,
+    ATTR_LINE_NUM_TABLE,
     ATTR_UNKNOWN
 } attribute_tag_t;
 
@@ -81,22 +82,45 @@ static char *attribute_tag_map[] = {
         [ATTR_NEST_HOST] = "NestHost",
         [ATTR_NEST_MEMBERS] = "NestMembers",
         [ATTR_SOURCE_FILE] = "SourceFile",
+        [ATTR_LINE_NUM_TABLE] = "LineNumberTable",
         [ATTR_UNKNOWN] = NULL
 };
+
+typedef struct exception_table_t {
+    uint16_t start_pc;
+    uint16_t end_pc;
+    uint16_t handler_pc;
+    uint16_t catch_type;
+} exception_table_t;
+
+typedef struct attribute_t;
+
+typedef struct attr_code_t {
+    uint16_t max_stack;
+    uint16_t max_locals;
+    uint32_t code_length;
+    uint8_t *code;
+    uint16_t exception_table_length;
+    exception_table_t *exception_table;
+    uint16_t attributes_count;
+    struct attribute_t *attributes;
+} attr_code_t;
+
+typedef struct attr_source_file_t {
+
+} attr_source_file_t;
 
 // attribute length refers to length in BYTES of info
 typedef struct attribute_t {
     attribute_tag_t tag;
     uint16_t name_index;
     uint32_t attribute_length;
-    uint8_t *info;
+//    uint8_t *info;
     // uint8_t tag;
-//    union {
-//        constant_utf8_info_t utf8_info;
-//        constant_class_info_t class_info;
-//        constant_method_ref_info_t method_ref_info;
-//        constant_name_and_type_info_t name_and_type_info;
-//    } info;
+    union {
+        attr_code_t *attr_code;
+        attr_source_file_t *attr_source_file;
+    } info;
 } attribute_t;
 
 typedef struct interface_t {

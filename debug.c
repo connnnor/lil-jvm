@@ -47,12 +47,30 @@ void dump_fields(uint16_t count, field_t *fields) {
     printf("Fields : %u\n", count);
 }
 
+void dump_attributes(class_file_t *class_file, uint16_t count, attribute_t *attributes, int indent_level);
+
+void dump_attr_code(attribute_t *attr, int indent_level) {
+    attr_code_t *code_attr = attr->info.attr_code;
+    printf("%*s%-20s = 0x%04x // %s\n", (indent_level + 1) * 2, "", "Max Stack", code_attr->max_stack);
+    printf("%*s%-20s = 0x%04x // %s\n", (indent_level + 1) * 2, "", "Max Locals", code_attr->max_locals);
+    printf("%*s%-20s = 0x%08x // %s\n", (indent_level + 1) * 2, "", "Code Length", code_attr->code_length);
+}
+
 void dump_attributes(class_file_t *class_file, uint16_t count, attribute_t *attributes, int indent_level) {
     printf("%*sAttributes : %u\n", indent_level * 2, "", count);
     for (uint16_t i = 0; i < count; i++) {
         printf("%*s%-20s = 0x%04x // %s\n", (indent_level + 1) * 2, "", "Name Index", attributes[i].name_index,
                get_constant_utf8(class_file, attributes[i].name_index));
         printf("%*s%-20s = 0x%04x\n", (indent_level + 1) * 2, "", "Length (Bytes)", attributes[i].attribute_length);
+        switch(attributes[i].tag) {
+            case ATTR_CODE:
+                dump_attr_code(attributes[i].info.attr_code, indent_level + 1);
+                break;
+            case ATTR_UNKNOWN:
+            default:
+                printf("%*s%-20s = 0x%04x\n", (indent_level + 1) * 2, "", "Unknown Attribute");
+                break;
+        }
         //printf("%*s%-20s = %s", (indent_level + 1) * 2, "", "Info", "TODO (");
         //print_bytes(attributes[i].info, attributes[i].attribute_length);
         //printf(")\n");
