@@ -5,6 +5,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <assert.h>
 
 #ifdef DEBUG
 #define DEBUG_TRACE_EXECUTION
@@ -21,7 +22,8 @@
 // error codes
 #define EXIT_SUCCESS 0
 #define EXIT_MALLOC_ERROR 1
-#define EXIT_FILE_ERROR 74
+#define EXIT_MAGIC_ERROR 10
+#define EXIT_FILE_ERROR 20
 #define EXIT_COMPILE_ERROR 65
 #define EXIT_RUNTIME_ERROR 70
 
