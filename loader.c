@@ -111,10 +111,43 @@ attribute_tag_t get_attribute_tag(char *str) {
     return ATTR_UNKNOWN;
 }
 
-attr_code_t *read_attribute_code() {
+void read_attributes(class_file_t *cf, uint16_t count, attribute_t **attributes);
+
+attr_code_t *read_attribute_code(class_file_t *cf) {
     attr_code_t *a = ALLOCATE(attr_code_t, 1);
     read_bytes(&a->max_stack, 2);
     read_bytes(&a->max_stack, 2);
+    read_bytes(&a->code_length, 4);
+    a->code = ALLOCATE(uint8_t, a->code_length);
+    memcpy(a->code, current, a->code_length);
+    current += a->code_length;
+    read_bytes(&a->exception_table_length, 2);
+    a->exception_table = ALLOCATE(exception_table_t , a->exception_table_length);
+    for (uint16_t i = 0; i < a->exception_table_length; i++) {
+        read_bytes(&a->exception_table[i].start_pc, 2);
+        read_bytes(&a->exception_table[i].end_pc, 2);
+        read_bytes(&a->exception_table[i].handler_pc, 2);
+        read_bytes(&a->exception_table[i].catch_type, 2);
+    }
+    read_bytes(&a->attributes_count, 2);
+    read_attributes(cf, a->attributes_count, &a->attributes);
+    return a;
+}
+
+attr_line_number_table_t *read_attribute_line_number_table(class_file_t *cf) {
+    attr_line_number_table_t *a = ALLOCATE(attr_line_number_table_t, 1);
+    read_bytes(&a->line_number_table_length, 2);
+    a->line_number_table = ALLOCATE(line_number_table_t , a->line_number_table_length);
+    for (uint16_t i = 0; i < a->line_number_table_length; i++) {
+        read_bytes(&a->line_number_table[i].start_pc, 2);
+        read_bytes(&a->line_number_table[i].line_number, 2);
+    }
+    return a;
+}
+
+attr_source_file_t *read_attribute_source_file(class_file_t *cf) {
+    attr_source_file_t *a = ALLOCATE(attr_source_file_t, 1);
+    read_bytes(&a->sourcefile_index, 2);
     return a;
 }
 
@@ -129,21 +162,22 @@ void read_attributes(class_file_t *cf, uint16_t count, attribute_t **attributes)
 
         // lookup name in constant pool and map to tag
         char *name = get_constant_utf8(cf, a[i].name_index);
-        attribute_tag_t tag = get_attribute_tag(name);
+        a->tag = get_attribute_tag(name);
 
         read_bytes(&a[i].attribute_length, 4);
-        switch (tag) {
+        switch (a->tag) {
             case ATTR_CODE:
-                a[i].info.attr_code = read_attribute_code();
-                current -= 4;
-                break;
-            case ATTR_SOURCE_FILE:
+                a[i].info.attr_code = read_attribute_code(cf);
                 break;
             case ATTR_LINE_NUM_TABLE:
+                a[i].info.attr_line_number_table = read_attribute_line_number_table(cf);
+                break;
+            case ATTR_SOURCE_FILE:
+                a[i].info.attr_source_file = read_attribute_source_file(cf);
                 break;
             case ATTR_UNKNOWN:
             default:
-                printf("Error: Unknown tag 0x%02d for attribute with name %s", tag, name);
+                printf("Error: Unknown tag 0x%02d for attribute with name %s\n", a->tag, name);
                 exit(-1);
         }
        // copy info byte array

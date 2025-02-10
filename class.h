@@ -93,7 +93,7 @@ typedef struct exception_table_t {
     uint16_t catch_type;
 } exception_table_t;
 
-typedef struct attribute_t;
+struct attribute_t;
 
 typedef struct attr_code_t {
     uint16_t max_stack;
@@ -107,8 +107,18 @@ typedef struct attr_code_t {
 } attr_code_t;
 
 typedef struct attr_source_file_t {
-
+    uint16_t sourcefile_index;
 } attr_source_file_t;
+
+typedef struct line_number_table_t {
+    uint16_t start_pc;
+    uint16_t line_number;
+} line_number_table_t;
+
+typedef struct attr_line_number_table_t {
+    uint16_t line_number_table_length;
+    line_number_table_t *line_number_table;
+} attr_line_number_table_t;
 
 // attribute length refers to length in BYTES of info
 typedef struct attribute_t {
@@ -120,6 +130,7 @@ typedef struct attribute_t {
     union {
         attr_code_t *attr_code;
         attr_source_file_t *attr_source_file;
+        attr_line_number_table_t *attr_line_number_table;
     } info;
 } attribute_t;
 
