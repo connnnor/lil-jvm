@@ -3,6 +3,16 @@
 
 #include "common.h"
 
+typedef enum opcode_t {
+    ILOAD_0 = 0x1a,
+    ILOAD_1 = 0x1b,
+    ALOAD_0 = 0x2a,
+    IADD    = 0x60,
+    IRETURN = 0xac,
+    RETURN  = 0xb1,
+    INVOKE_SPECIAL = 0xb7,
+} opcode_t;
+
 // only doing ones i need for now
 typedef enum constant_tag_t {
     CONSTANT_UTF8          =  1,

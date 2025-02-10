@@ -56,13 +56,37 @@ void dump_attribute_common(class_file_t *cf, attribute_t *a, int indent_level) {
     printf("%*s%-20s = 0x%04x\n", indent_level * 2, "", "Length (Bytes)", a->attribute_length);
 }
 
+void dump_code(uint8_t *code, uint32_t code_length, int indent_level) {
+    uint32_t offset = 0;
+    while(offset < code_length) {
+        uint8_t opcode = *(code + offset);
+        switch(opcode) {
+            case ALOAD_0:
+                printf("%*s %2d: %s\n", indent_level * 2, "", offset, "aload_0");
+                break;
+            case INVOKE_SPECIAL:
+                printf("%*s %2d: %s\n", indent_level * 2, "", offset, "invokespecial");
+                offset+= 2;
+                break;
+            case ILOAD_0:
+                printf("%*s %2d: %s\n", indent_level * 2, "", offset, "iload_0");
+                break;
+            case ILOAD_1:
+                printf("%*s %2d: %s\n", indent_level * 2, "", offset, "iload_1");
+                break;
+        }
+        offset++;
+    }
+}
+
 void dump_attr_code(class_file_t *cf, attribute_t *attr, int indent_level) {
     printf("%*sCode Attribute :\n", indent_level * 2, "");
     dump_attribute_common(cf, attr, indent_level + 1);
     attr_code_t *code_attr = attr->info.attr_code;
     printf("%*s%-20s = 0x%04x\n", (indent_level + 1) * 2, "", "Max Stack", code_attr->max_stack);
     printf("%*s%-20s = 0x%04x\n", (indent_level + 1) * 2, "", "Max Locals", code_attr->max_locals);
-    printf("%*s%-20s = [", (indent_level + 1) * 2, "", "Code ");print_bytes(code_attr->code, code_attr->code_length);printf("]\n");
+    dump_code(code_attr->code, code_attr->code_length, indent_level + 1);
+    //printf("%*s%-20s = [", (indent_level + 1) * 2, "", "Code ");print_bytes(code_attr->code, code_attr->code_length);printf("]\n");
     printf("%*sException Table : %u\n", (indent_level + 0) * 2, "", code_attr->exception_table_length);
     for (uint16_t i = 0; i < code_attr->exception_table_length; i++) {
         printf("%*s%-20s = 0x%04x\n", (indent_level + 1) * 2, "", "Start PC", code_attr->exception_table[i].start_pc);
