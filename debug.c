@@ -62,7 +62,7 @@ void dump_attr_code(class_file_t *cf, attribute_t *attr, int indent_level) {
     attr_code_t *code_attr = attr->info.attr_code;
     printf("%*s%-20s = 0x%04x\n", (indent_level + 1) * 2, "", "Max Stack", code_attr->max_stack);
     printf("%*s%-20s = 0x%04x\n", (indent_level + 1) * 2, "", "Max Locals", code_attr->max_locals);
-    // TODO - print code
+    printf("%*s%-20s = [", (indent_level + 1) * 2, "", "Code ");print_bytes(code_attr->code, code_attr->code_length);printf("]\n");
     printf("%*sException Table : %u\n", (indent_level + 0) * 2, "", code_attr->exception_table_length);
     for (uint16_t i = 0; i < code_attr->exception_table_length; i++) {
         printf("%*s%-20s = 0x%04x\n", (indent_level + 1) * 2, "", "Start PC", code_attr->exception_table[i].start_pc);
@@ -87,7 +87,6 @@ void dump_attr_line_num_table(class_file_t *cf, attribute_t *attr, int indent_le
     printf("%*sLine Number Table :\n", indent_level * 2, "");
     dump_attribute_common(cf, attr, indent_level + 1);
     attr_line_number_table_t *a = attr->info.attr_line_number_table;
-    //printf("%*s%-20s = 0x%04x\n", (indent_level + 1) * 2, "", "Unknown Attribute", a->line_number_table[]
     printf("%*s%-20s = 0x%04x\n", (indent_level + 1) * 2, "", "Line Number Table Length", a->line_number_table_length);
     for (uint16_t i = 0; i < a->line_number_table_length; i++) {
         printf("%*s%-20s = 0x%04x\n", (indent_level + 1) * 2, "", "Start PC", a->line_number_table[i].start_pc);
@@ -98,9 +97,6 @@ void dump_attr_line_num_table(class_file_t *cf, attribute_t *attr, int indent_le
 void dump_attributes(class_file_t *class_file, uint16_t count, attribute_t *attributes, int indent_level) {
     printf("%*sAttributes : %u\n", indent_level * 2, "", count);
     for (uint16_t i = 0; i < count; i++) {
-//        printf("%*s%-20s = 0x%04x // %s\n", (indent_level + 1) * 2, "", "Name Index", attributes[i].name_index,
-//               get_constant_utf8(class_file, attributes[i].name_index));
-//        printf("%*s%-20s = 0x%04x\n", (indent_level + 1) * 2, "", "Length (Bytes)", attributes[i].attribute_length);
         switch(attributes[i].tag) {
             case ATTR_CODE:
                 dump_attr_code(class_file, &attributes[i], indent_level + 1);
@@ -116,9 +112,6 @@ void dump_attributes(class_file_t *class_file, uint16_t count, attribute_t *attr
                 printf("%*s%-20s = 0x%04x\n", (indent_level + 1) * 2, "", "Unknown Attribute", attributes[i].tag);
                 break;
         }
-        //printf("%*s%-20s = %s", (indent_level + 1) * 2, "", "Info", "TODO (");
-        //print_bytes(attributes[i].info, attributes[i].attribute_length);
-        //printf(")\n");
     }
 }
 

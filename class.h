@@ -155,6 +155,7 @@ typedef struct field_t {
 } field_t;
 
 typedef enum access_flags_t {
+    ACC_FLAG_MIN,
     ACC_PUBLIC     = 0x0001,
     ACC_FINAL      = 0x0010,
     ACC_SUPER      = 0x0020,
@@ -163,8 +164,24 @@ typedef enum access_flags_t {
     ACC_SYNTHETIC  = 0x1000,
     ACC_ANNOTATION = 0x2000,
     ACC_ENUM       = 0x4000,
-    ACC_MODULE     = 0x8000
+    ACC_MODULE     = 0x8000,
+    ACC_FLAG_MAX
 } access_flags_t;
+
+// eehhhh i want to map these to messages but it's kludgy because
+// the enum values are like 0, 1, 2, 4, 8, etc. instead of continguous
+// array values like 0, 1, 2, 3, 4, 5
+//static char *access_flags_map[] = {
+//        [ACC_PUBLIC]     = "ACC_PUBLIC",
+//        [ACC_FINAL]      = "ACC_FINAL",
+//        [ACC_SUPER]      = "ACC_SUPER",
+//        [ACC_INTERFACE]  = "ACC_INTERFACE",
+//        [ACC_ABSTRACT]   = "ACC_ABSTRACT",
+//        [ACC_SYNTHETIC]  = "ACC_SYNTHETIC",
+//        [ACC_ANNOTATION] = "ACC_ANNOTATION",
+//        [ACC_ENUM]       = "ACC_ENUM",
+//        [ACC_MODULE]     = "ACC_MODULE",
+//};
 
 // https://docs.oracle.com/javase/specs/jvms/se14/html/jvms-4.html
 // 4.1. The ClassFile Structure
