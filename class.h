@@ -4,13 +4,16 @@
 #include "common.h"
 
 typedef enum opcode_t {
-    ILOAD_0 = 0x1a,
-    ILOAD_1 = 0x1b,
-    ALOAD_0 = 0x2a,
-    IADD    = 0x60,
-    IRETURN = 0xac,
-    RETURN  = 0xb1,
-    INVOKE_SPECIAL = 0xb7,
+    OP_ICONST1 = 0x04,
+    OP_ICONST2 = 0x05,
+    OP_ILOAD_0 = 0x1a,
+    OP_ILOAD_1 = 0x1b,
+    OP_ALOAD_0 = 0x2a,
+    OP_IADD    = 0x60,
+    OP_IRETURN = 0xac,
+    OP_RETURN  = 0xb1,
+    OP_INVOKE_SPECIAL = 0xb7,
+    OP_INVOKE_STATIC = 0xb8
 } opcode_t;
 
 // only doing ones i need for now

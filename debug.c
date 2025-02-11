@@ -56,26 +56,51 @@ void dump_attribute_common(class_file_t *cf, attribute_t *a, int indent_level) {
     printf("%*s%-20s = 0x%04x\n", indent_level * 2, "", "Length (Bytes)", a->attribute_length);
 }
 
-void dump_code(uint8_t *code, uint32_t code_length, int indent_level) {
-    uint32_t offset = 0;
-    while(offset < code_length) {
-        uint8_t opcode = *(code + offset);
-        switch(opcode) {
-            case ALOAD_0:
-                printf("%*s %2d: %s\n", indent_level * 2, "", offset, "aload_0");
-                break;
-            case INVOKE_SPECIAL:
-                printf("%*s %2d: %s\n", indent_level * 2, "", offset, "invokespecial");
-                offset+= 2;
-                break;
-            case ILOAD_0:
-                printf("%*s %2d: %s\n", indent_level * 2, "", offset, "iload_0");
-                break;
-            case ILOAD_1:
-                printf("%*s %2d: %s\n", indent_level * 2, "", offset, "iload_1");
-                break;
-        }
-        offset++;
+int simple_inst(const char *name, uint32_t offset) {
+    printf("%02u: %s\n", offset, name);
+    return offset + 1;
+}
+
+int invoke_inst(const char *name, uint8_t *code, uint32_t offset) {
+    // index = (indexbyte1 << 8) | indexbyte2
+    uint16_t index = (code[offset + 1] << 8) | (code[offset + 2]);
+    printf("%02u: %-20s (Index = %4u)\n", offset, name, index);
+    return offset + 3;
+}
+
+int disassemble_inst(uint8_t *code, uint32_t offset, int indent_level) {
+    uint8_t opcode = code[offset];
+    printf("%*s", indent_level * 2, "");
+    switch(opcode) {
+        case OP_ICONST1:
+            return simple_inst("iconst1", offset);
+        case OP_ICONST2:
+            return simple_inst("iconst2", offset);
+        case OP_ALOAD_0:
+            return simple_inst("aload_0", offset);
+        case OP_INVOKE_SPECIAL:
+            return invoke_inst("invokespecial", code, offset);
+        case OP_INVOKE_STATIC:
+            return invoke_inst("invokestatic", code, offset);
+        case OP_ILOAD_0:
+            return simple_inst("iload_0", offset);
+        case OP_ILOAD_1:
+            return simple_inst("iload_1", offset);
+        case OP_IADD:
+            return simple_inst("iadd", offset);
+        case OP_IRETURN:
+            return simple_inst("ireturn", offset);
+        case OP_RETURN:
+            return simple_inst("return", offset);
+        default:
+            printf("Unknown opcode %d\n", opcode);
+            return offset + 1;
+    }
+}
+
+void disassemble_code(uint8_t *code, uint32_t code_length, int indent_level) {
+    for (uint32_t offset = 0; offset < code_length;) {
+        offset = disassemble_inst(code, offset, indent_level + 1);
     }
 }
 
@@ -83,10 +108,9 @@ void dump_attr_code(class_file_t *cf, attribute_t *attr, int indent_level) {
     printf("%*sCode Attribute :\n", indent_level * 2, "");
     dump_attribute_common(cf, attr, indent_level + 1);
     attr_code_t *code_attr = attr->info.attr_code;
-    printf("%*s%-20s = 0x%04x\n", (indent_level + 1) * 2, "", "Max Stack", code_attr->max_stack);
-    printf("%*s%-20s = 0x%04x\n", (indent_level + 1) * 2, "", "Max Locals", code_attr->max_locals);
-    dump_code(code_attr->code, code_attr->code_length, indent_level + 1);
-    //printf("%*s%-20s = [", (indent_level + 1) * 2, "", "Code ");print_bytes(code_attr->code, code_attr->code_length);printf("]\n");
+    printf("%*s%-20s = 0x%04d\n", (indent_level + 1) * 2, "", "Max Stack", code_attr->max_stack);
+    printf("%*s%-20s = 0x%04d\n", (indent_level + 1) * 2, "", "Max Locals", code_attr->max_locals);
+    disassemble_code(code_attr->code, code_attr->code_length, indent_level + 1);
     printf("%*sException Table : %u\n", (indent_level + 0) * 2, "", code_attr->exception_table_length);
     for (uint16_t i = 0; i < code_attr->exception_table_length; i++) {
         printf("%*s%-20s = 0x%04x\n", (indent_level + 1) * 2, "", "Start PC", code_attr->exception_table[i].start_pc);
