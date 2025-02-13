@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include "debug.h"
 #include "loader.h"
+#include "vm.h"
 
 static char *read_file(const char *path) {
     FILE *f = fopen(path, "rb");
@@ -40,6 +41,8 @@ int main(int argc, char **argv) {
         read_class_file(bytes, class_file);
         FREE(char, bytes);
         dump_classfile(class_file);
+        interpret(class_file);
+
         FREE(class_file_t, class_file);
     } else {
         fprintf(stderr, "Usage: liljvm [path]\n");

@@ -6,4 +6,6 @@ set(CMAKE_C_STANDARD 11)
 add_executable(lil_jvm main.c
         debug.c
         loader.c
-        memory.c)
+        memory.c
+        vm.c
+        vm.h)

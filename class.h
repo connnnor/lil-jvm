@@ -3,6 +3,52 @@
 
 #include "common.h"
 
+// 2.6.1 a local variable can hold a value of type boolean, byte,
+// char, short, int, float, reference, or return address
+// a pair of local variables can hold a value of type long or double.
+typedef enum value_type_t {
+    VAL_BOOL,
+    VAL_INT,
+    VAL_LONG,
+    VAL_FLOAT,
+    VAL_DOUBLE,
+    VAL_REF,
+    VAL_ADDR,
+    // TODO reference
+    // TODO return address
+} value_type_t;
+
+typedef struct value_t {
+    value_type_t type;
+    union {
+        bool boolean;
+        int32_t integer;
+        int64_t llong;
+        float ffloat;
+        double ddouble;
+        // TODO reference
+        // TODO return address
+    } as;
+} value_t;
+
+#define IS_BOOL(value)    ((value).type == VAL_BOOL)
+#define IS_INT(value)     ((value).type == VAL_INT)
+#define IS_LONG(value)    ((value).type == VAL_LONG)
+#define IS_FLOAT(value)   ((value).type == VAL_FLOAT)
+#define IS_DOUBLE(value)  ((value).type == VAL_DOUBLE)
+
+#define AS_BOOL(value)    ((value).as.boolean)
+#define AS_INT(value)     ((value).as.integer)
+#define AS_LONG(value)    ((value).as.llong)
+#define AS_FLOAT(value)   ((value).as.ffloat)
+#define AS_DOUBLE(value)  ((value).as.ddouble)
+
+#define BOOL_VAL(value)  ((value_t) {VAL_BOOL,    {.boolean = value}})
+#define INT_VAL(value)   ((value_t) {VAL_INT,     {.integer = value}})
+#define LONG_VAL         ((value_t) {VAL_LONG,    {.llong = value}})
+#define FLOAT_VAL(value) ((value_t) {VAL_FLOAT,   {.ffloat = value}})
+#define DOUBLE_VAL(value) ((value_t) {VAL_DOUBLE, {.ddouble = value}})
+
 typedef enum opcode_t {
     OP_ICONST1 = 0x04,
     OP_ICONST2 = 0x05,

@@ -6,6 +6,9 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <stdio.h>
+
+#define DEBUG
 
 #ifdef DEBUG
 #define DEBUG_TRACE_EXECUTION
