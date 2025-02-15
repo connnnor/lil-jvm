@@ -2,6 +2,10 @@
 #define LIL_JVM_CLASS_H
 
 #include "common.h"
+#include "class.h"
+#include "common.h"
+//#include "memory.h"
+#include <string.h>
 
 // 2.6.1 a local variable can hold a value of type boolean, byte,
 // char, short, int, float, reference, or return address
@@ -133,18 +137,6 @@ typedef enum attribute_tag_t {
     ATTR_UNKNOWN
 } attribute_tag_t;
 
-static char *attribute_tag_map[] = {
-        [ATTR_CODE] = "Code",
-        [ATTR_CONSTANT_VALUE] = "ConstantValue",
-        [ATTR_STACK_MAP_TABLE] = "StackMapTable",
-        [ATTR_BOOTSTRAP_METHODS] = "BootstrapMethods",
-        [ATTR_NEST_HOST] = "NestHost",
-        [ATTR_NEST_MEMBERS] = "NestMembers",
-        [ATTR_SOURCE_FILE] = "SourceFile",
-        [ATTR_LINE_NUM_TABLE] = "LineNumberTable",
-        [ATTR_UNKNOWN] = NULL
-};
-
 typedef struct exception_table_t {
     uint16_t start_pc;
     uint16_t end_pc;
@@ -199,7 +191,7 @@ typedef struct attribute_t {
 #define AS_ATTR_CODE(attr)    ((attr)->info.attr_code)
 
 typedef struct interface_t {
-
+    void *todo;
 } interface_t;
 
 typedef struct method_t {
@@ -276,6 +268,14 @@ typedef struct class_file_t {
 
 method_t *get_class_method(class_file_t *class, const char *name, const char* descriptor);
 
+method_t *get_methodref(class_file_t *cf, uint16_t index);
+
 attribute_t *get_attribute_by_tag(int16_t attributes_count, attribute_t *attributes, attribute_tag_t tag);
+
+//void read_class_file(char *bytes, class_file_t *class_file);
+void read_class_file(uint8_t *bytes, class_file_t *class_file);
+
+char * get_constant_utf8(class_file_t *cf, uint16_t index);
+char * get_classname(class_file_t *cf, uint16_t index);
 
 #endif //LIL_JVM_CLASS_H

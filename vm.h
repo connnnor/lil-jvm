@@ -7,7 +7,7 @@
 #define STACK_MAX (FRAMES_MAX * UINT8_COUNT)
 
 typedef struct {
-    frame_t frames[FRAMES_MAX];
+    frame_t *frames[FRAMES_MAX];
     int frame_count;
 
     value_t stack[STACK_MAX];
@@ -21,6 +21,6 @@ typedef enum interpret_result_t {
 } interpret_result_t;
 
 interpret_result_t interpret(class_file_t *class);
-static interpret_result_t run();
+interpret_result_t run();
 
 #endif //LIL_JVM_VM_H

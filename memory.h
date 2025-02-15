@@ -21,6 +21,8 @@
 
 void *reallocate(void *ptr, size_t old_size, size_t new_size);
 
+struct class_file_t;
+
 // we need to keep track of where we are on stack
 // since we push & pop.
 // don't need to keep track of locals because those are indexed

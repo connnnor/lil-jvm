@@ -1,5 +1,4 @@
 #include "debug.h"
-#include "loader.h"
 
 void print_bytes(unsigned char *b, uint16_t length) {
     for (uint16_t i = 0; i < length; i++) {
@@ -41,10 +40,16 @@ void dump_constant_pool(uint16_t count, constant_pool_t *cp) {
 
 void dump_interfaces(uint16_t count, interface_t *interfaces) {
     printf("Interfaces : %u\n", count);
+    if (interfaces == NULL) {
+        ;
+    }
 }
 
 void dump_fields(uint16_t count, field_t *fields) {
     printf("Fields : %u\n", count);
+    if (fields == NULL) {
+        ;
+    }
 }
 
 void dump_attributes(class_file_t *class_file, uint16_t count, attribute_t *attributes, int indent_level);
@@ -170,7 +175,6 @@ void dump_methods(class_file_t *class_file, uint16_t count, method_t *methods) {
     for (uint16_t i = 0; i < count; i++) {
         printf("  Method[%u]:\n", i);
         printf("    %-20s = 0x%04x\n", "Access Flags",     methods[i].access_flags);
-        uint16_t name_index = methods[i].name_index;
         printf("    %-20s = 0x%04x // %s\n", "Name Index", methods[i].name_index,
                get_constant_utf8(class_file, methods[i].name_index));
 //        printf("    %-20s = 0x%04x // %s\n", "Descriptor Index", methods[i].descriptor_index,

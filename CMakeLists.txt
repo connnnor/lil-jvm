@@ -3,9 +3,11 @@ project(lil_jvm C)
 
 set(CMAKE_C_STANDARD 11)
 
+add_compile_options(-Wall -Wextra -Wpedantic -Werror)
+
 add_executable(lil_jvm main.c
         debug.c
-        loader.c
+        class.c
         memory.c
         vm.c
         vm.h)

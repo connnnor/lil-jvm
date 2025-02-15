@@ -40,6 +40,9 @@ void print_value(value_t value) {
         case VAL_LONG:   printf("%ld", AS_LONG(value)); break;
         case VAL_FLOAT:  printf("%f",  AS_FLOAT(value)); break;
         case VAL_DOUBLE: printf("%f",  AS_DOUBLE(value)); break;
+        case VAL_ADDR:
+        case VAL_REF:
+            printf("TODO add VAL_ADDR & VAL_REF: print_value");
     }
 }
 
@@ -60,9 +63,9 @@ value_t pop_word() {
     return *vm.stack_top;
 }
 
-static value_t peek(int distance) {
-    return vm.stack_top[-1 - distance];
-}
+//static value_t peek(int distance) {
+//    return vm.stack_top[-1 - distance];
+//}
 
 //frame_t *push_frame(frame_t *parent, uint8_t *code, class_file_t *class_file, uint16_t max_stack, uint16_t max_locals) {
 frame_t *push_frame(uint8_t *code, class_file_t *class_file, uint16_t max_stack, uint16_t max_locals) {
@@ -75,19 +78,35 @@ frame_t *push_frame(uint8_t *code, class_file_t *class_file, uint16_t max_stack,
     frame->code = code;
     frame->pc = 0;
 
+    vm.frames[vm.frame_count++] = frame;
+
     return frame;
 }
 
-static interpret_result_t run() {
-    frame_t *frame = vm.frames;
-    frame->stack = vm.stack;
-    frame->stack_top = vm.stack_top;
+int *pop_frame(frame_t *frame) {
+    if (vm.frame_count <= 1) {
+        runtime_error("popping last frame");
+    }
+
+    FREE(value_t, frame->locals);
+    FREE(value_t, frame->stack);
+    FREE(frame_t, frame);
+
+    vm.frame_count--;
+
+    return 0;
+}
+
+interpret_result_t run() {
+    frame_t *frame = vm.frames[vm.frame_count - 1];
+//    frame->stack = vm.stack;
+//    frame->stack_top = vm.stack_top;
 //#define READ_BYTE() (*frame[->ip++)
 #define READ_BYTE() (frame->code[frame->pc++])
 
 #define READ_SHORT() \
    (frame->pc += 2, \
-   (uint16_t) ((frame->code[frame->pc - 2] << 8) | frame->code[-frame->pc - 1]))
+   (uint16_t) ((frame->code[frame->pc - 2] << 8) | frame->code[frame->pc - 1]))
 
     for (;;) {
 #ifdef DEBUG_TRACE_EXECUTION
@@ -100,6 +119,7 @@ static interpret_result_t run() {
     printf("\n");
     disassemble_inst(frame->code, frame->pc, 0);
 #endif
+        frame = vm.frames[vm.frame_count - 1];
         uint8_t inst;
         switch (inst = READ_BYTE()) {
             case OP_ICONST1:
@@ -110,9 +130,17 @@ static interpret_result_t run() {
 //                return simple_inst("aload_0", offset);
 //            case OP_INVOKE_SPECIAL:
 //                return invoke_inst("invokespecial", code, offset);
+            case OP_RETURN: {
+                pop_frame(frame);
+                break;
+            }
+//                frame_t *push_frame(uint8_t *code, class_file_t *class_file, uint16_t max_stack, uint16_t max_locals) {
             case OP_INVOKE_STATIC: {
                 uint16_t index = READ_SHORT();
-                //lookup
+                method_t *method = get_methodref(frame->class_file, index);
+                attribute_t *attribute = get_attribute_by_tag(method->attribute_count, method->attributes, ATTR_CODE);
+                attr_code_t *code_attr = AS_ATTR_CODE(attribute);
+                push_frame(code_attr->code, frame->class_file, code_attr->max_stack, code_attr->max_locals);
                 break;
             }
 //            case OP_ILOAD_0:
@@ -123,6 +151,7 @@ static interpret_result_t run() {
                 int a = AS_INT(pop());
                 int b = AS_INT(pop());
                 push(INT_VAL(a + b));
+                break;
             }
 //            case OP_IRETURN:
 //                return simple_inst("ireturn", offset);
@@ -148,10 +177,8 @@ interpret_result_t interpret(class_file_t *class) {
         runtime_error("error cannot find main method\n");
     }
 
-    attr_code_t *code_attr = AS_ATTR_CODE(get_attribute_by_tag(main->attribute_count, main->attributes, ATTR_CODE));
-    frame_t *frame = push_frame(code_attr->code, class, 2, 1);
-    vm.frames[0] = *frame;
+    attribute_t *code_attr = get_attribute_by_tag(main->attribute_count, main->attributes, ATTR_CODE);
+    push_frame(code_attr->info.attr_code->code, class, 2, 1);
     vm.stack_top = vm.stack;
     return run();
 }
-

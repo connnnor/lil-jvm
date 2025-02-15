@@ -4,10 +4,9 @@
 #include "memory.h"
 #include <stdio.h>
 #include "debug.h"
-#include "loader.h"
 #include "vm.h"
 
-static char *read_file(const char *path) {
+static uint8_t *read_file(const char *path) {
     FILE *f = fopen(path, "rb");
     if (f == NULL) {
         fprintf(stderr, "Could not open file \"%s\".\n", path);
@@ -18,7 +17,7 @@ static char *read_file(const char *path) {
     size_t size = ftell(f);
     rewind(f);
 
-    char *buf = malloc(size + 1);
+    uint8_t *buf = malloc(size + 1);
     if (buf == NULL) {
         fprintf(stderr, "Not enough memory to read \"%s\".\n", path);
         exit(EXIT_FILE_ERROR);
@@ -37,9 +36,9 @@ static char *read_file(const char *path) {
 int main(int argc, char **argv) {
     if (argc == 2) {
         class_file_t *class_file = ALLOCATE(class_file_t, 1);
-        char *bytes = read_file(argv[1]);
+        uint8_t *bytes = read_file(argv[1]);
         read_class_file(bytes, class_file);
-        FREE(char, bytes);
+        FREE(uint8_t, bytes);
         dump_classfile(class_file);
         interpret(class_file);
 

@@ -1,12 +1,9 @@
-#include "loader.h"
 #include <stdio.h>
 #include "memory.h"
-#include "debug.h"
 #include <string.h>
+#include <stdarg.h>
 
 #define NULL ((void *)0)
-
-#define DEBUG 1
 
 #define debug_print(fmt, ...) \
             do { if (DEBUG) fprintf(stderr, fmt, __VA_ARGS__); } while (0)
@@ -25,8 +22,8 @@ char * get_classname(class_file_t *cf, uint16_t index) {
 
 method_t *get_class_method(class_file_t *class, const char *name, const char* descriptor) {
     for (int i = 0; i < class->methods_count; i++) {
-        if (strcmp(name, get_constant_utf8(class, class->methods[i].name_index)) == 0 &&
-            strcmp(name, get_constant_utf8(class, class->methods[i].name_index)) == 0) {
+        if (strcmp(name,       get_constant_utf8(class, class->methods[i].name_index)) == 0 &&
+            strcmp(descriptor, get_constant_utf8(class, class->methods[i].descriptor_index)) == 0) {
             return &class->methods[i];
         }
     }
@@ -36,7 +33,7 @@ method_t *get_class_method(class_file_t *class, const char *name, const char* de
 
 // read unsigned integer into dst
 
-void *current;
+uint8_t *current;
 
 static void read_bytes(void *dst, uint16_t count) {
     const void *src = current;
@@ -72,11 +69,11 @@ static uint8_t read_byte() {
     return out;
 }
 
-static uint16_t read_word() {
-    uint16_t out;
-    read_bytes(&out, 2);
-    return out;
-}
+//static uint16_t read_word() {
+//    uint16_t out;
+//    read_bytes(&out, 2);
+//    return out;
+//}
 
 void read_constant_pool(uint16_t count, constant_pool_t **constant_pool) {
     constant_pool_t *cp = ALLOCATE(constant_pool_t, count);
@@ -87,7 +84,7 @@ void read_constant_pool(uint16_t count, constant_pool_t **constant_pool) {
         switch(tag) {
             case CONSTANT_UTF8:
                 read_bytes(&cp[i].info.utf8_info.length, 2);
-                cp[i].info.utf8_info.bytes = copy_string(current, cp[i].info.utf8_info.length);
+                cp[i].info.utf8_info.bytes = copy_string((char*) current, cp[i].info.utf8_info.length);
                 current += cp[i].info.utf8_info.length;
                 break;
             case CONSTANT_CLASS:
@@ -111,6 +108,18 @@ void read_constant_pool(uint16_t count, constant_pool_t **constant_pool) {
 }
 
 // compare attribute name string to get attribute_tag_t
+
+static char *attribute_tag_map[] = {
+        [ATTR_CODE] = "Code",
+        [ATTR_CONSTANT_VALUE] = "ConstantValue",
+        [ATTR_STACK_MAP_TABLE] = "StackMapTable",
+        [ATTR_BOOTSTRAP_METHODS] = "BootstrapMethods",
+        [ATTR_NEST_HOST] = "NestHost",
+        [ATTR_NEST_MEMBERS] = "NestMembers",
+        [ATTR_SOURCE_FILE] = "SourceFile",
+        [ATTR_LINE_NUM_TABLE] = "LineNumberTable",
+        [ATTR_UNKNOWN] = NULL
+};
 
 char *get_attribute_name(attribute_tag_t tag) {
     return attribute_tag_map[tag];
@@ -157,7 +166,7 @@ attr_code_t *read_attribute_code(class_file_t *cf) {
     return a;
 }
 
-attr_line_number_table_t *read_attribute_line_number_table(class_file_t *cf) {
+attr_line_number_table_t *read_attribute_line_number_table() {
     attr_line_number_table_t *a = ALLOCATE(attr_line_number_table_t, 1);
     read_bytes(&a->line_number_table_length, 2);
     a->line_number_table = ALLOCATE(line_number_table_t , a->line_number_table_length);
@@ -168,7 +177,7 @@ attr_line_number_table_t *read_attribute_line_number_table(class_file_t *cf) {
     return a;
 }
 
-attr_source_file_t *read_attribute_source_file(class_file_t *cf) {
+attr_source_file_t *read_attribute_source_file() {
     attr_source_file_t *a = ALLOCATE(attr_source_file_t, 1);
     read_bytes(&a->sourcefile_index, 2);
     return a;
@@ -193,10 +202,10 @@ void read_attributes(class_file_t *cf, uint16_t count, attribute_t **attributes)
                 a[i].info.attr_code = read_attribute_code(cf);
                 break;
             case ATTR_LINE_NUM_TABLE:
-                a[i].info.attr_line_number_table = read_attribute_line_number_table(cf);
+                a[i].info.attr_line_number_table = read_attribute_line_number_table();
                 break;
             case ATTR_SOURCE_FILE:
-                a[i].info.attr_source_file = read_attribute_source_file(cf);
+                a[i].info.attr_source_file = read_attribute_source_file();
                 break;
             case ATTR_UNKNOWN:
             default:
@@ -212,10 +221,17 @@ void read_attributes(class_file_t *cf, uint16_t count, attribute_t **attributes)
     *attributes = a;
 }
 
+method_t *get_methodref(class_file_t *cf, uint16_t index) {
+    constant_tag_t tag = cf->constant_pool[index - 1].tag;
+    assert(tag == CONSTANT_METHOD_REF && "Constant is not MethodRef");
+    return &cf->constant_pool[index - 1].info.method_ref_info;
+}
+
 void read_interfaces(uint16_t count, interface_t *interfaces) {
     if (count == 0) {
         return;
     }
+    (void) interfaces; // suppress -Werror=unused-parameter
     printf("TODO: read_interfaces\n");
     exit(-1);
 }
@@ -224,6 +240,7 @@ void read_fields(uint16_t count, field_t *fields) {
     if (count == 0) {
         return;
     }
+    (void) fields; // suppress -Werror=unused-parameter
     printf("TODO: read_fields\n");
     exit(-1);
 }
@@ -244,7 +261,7 @@ void read_methods(class_file_t *cf, uint16_t count, method_t **methods) {
     *methods = m;
 }
 
-void read_class_file(char *bytes, class_file_t *class_file) {
+void read_class_file(uint8_t *bytes, class_file_t *class_file) {
     current = bytes;
     read_bytes(&class_file->magic, 4);
     if (class_file->magic != 0xCAFEBABE) {
