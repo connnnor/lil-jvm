@@ -71,7 +71,8 @@ typedef enum constant_tag_t {
     CONSTANT_UTF8          =  1,
     CONSTANT_CLASS         =  7,
     CONSTANT_METHOD_REF    = 10,
-    CONSTANT_NAME_AND_TYPE = 12
+    CONSTANT_NAME_AND_TYPE = 12,
+    CONSTANT_UNKNOWN
 } constant_tag_t;
 
 //CONSTANT_Utf8_info {
@@ -277,5 +278,8 @@ void read_class_file(uint8_t *bytes, class_file_t *class_file);
 
 char * get_constant_utf8(class_file_t *cf, uint16_t index);
 char * get_classname(class_file_t *cf, uint16_t index);
+
+constant_pool_t *get_constant(class_file_t *cf, uint16_t index, constant_tag_t expected);
+method_t *get_methodref(class_file_t *cf, uint16_t index);
 
 #endif //LIL_JVM_CLASS_H

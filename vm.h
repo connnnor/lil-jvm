@@ -10,8 +10,8 @@ typedef struct {
     frame_t *frames[FRAMES_MAX];
     int frame_count;
 
-    value_t stack[STACK_MAX];
-    value_t *stack_top;
+//    value_t stack[STACK_MAX];
+//    value_t *stack_top;
 } vm_t;
 
 typedef enum interpret_result_t {
@@ -21,6 +21,6 @@ typedef enum interpret_result_t {
 } interpret_result_t;
 
 interpret_result_t interpret(class_file_t *class);
-interpret_result_t run();
+interpret_result_t run(void);
 
 #endif //LIL_JVM_VM_H

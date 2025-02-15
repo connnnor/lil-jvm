@@ -1,12 +1,13 @@
 #include <stdio.h>
 #include "memory.h"
 #include <string.h>
-#include <stdarg.h>
 
 #define NULL ((void *)0)
 
 #define debug_print(fmt, ...) \
             do { if (DEBUG) fprintf(stderr, fmt, __VA_ARGS__); } while (0)
+
+void runtime_error(const char * format, ...);
 
 char * get_constant_utf8(class_file_t *cf, uint16_t index) {
     constant_tag_t tag = cf->constant_pool[index - 1].tag;
@@ -63,7 +64,7 @@ char * copy_string(const char *chars, int length) {
     return out;
 }
 
-static uint8_t read_byte() {
+static uint8_t read_byte(void) {
     uint8_t out;
     read_bytes(&out, 1);
     return out;
@@ -145,10 +146,34 @@ attribute_t *get_attribute_by_tag(int16_t attributes_count, attribute_t *attribu
     return NULL;
 }
 
+static char *constant_tag_map[] = {
+        [CONSTANT_UTF8] = "Utf8",
+        [CONSTANT_CLASS] = "Class",
+        [CONSTANT_METHOD_REF] = "Methodref",
+        [CONSTANT_NAME_AND_TYPE] = "NameAndType",
+        [CONSTANT_UNKNOWN] = NULL
+};
+
+char *get_constant_tag_name(constant_tag_t tag) {
+    return constant_tag_map[tag];
+}
+
+
+// return entry from constant pool and verify it has expected tag
+constant_pool_t *get_constant(class_file_t *cf, uint16_t index, constant_tag_t expected) {
+    constant_tag_t actual = cf->constant_pool[index - 1].tag;
+    if (actual != expected) {
+        runtime_error("get_constant index = %d. Expected tag %s but found %s\n",
+                      get_constant_tag_name(expected),
+                      get_constant_tag_name(actual));
+    }
+    return &cf->constant_pool[index - 1];
+}
+
 attr_code_t *read_attribute_code(class_file_t *cf) {
     attr_code_t *a = ALLOCATE(attr_code_t, 1);
     read_bytes(&a->max_stack, 2);
-    read_bytes(&a->max_stack, 2);
+    read_bytes(&a->max_locals, 2);
     read_bytes(&a->code_length, 4);
     a->code = ALLOCATE(uint8_t, a->code_length);
     memcpy(a->code, current, a->code_length);
@@ -166,7 +191,7 @@ attr_code_t *read_attribute_code(class_file_t *cf) {
     return a;
 }
 
-attr_line_number_table_t *read_attribute_line_number_table() {
+attr_line_number_table_t *read_attribute_line_number_table(void) {
     attr_line_number_table_t *a = ALLOCATE(attr_line_number_table_t, 1);
     read_bytes(&a->line_number_table_length, 2);
     a->line_number_table = ALLOCATE(line_number_table_t , a->line_number_table_length);
@@ -177,7 +202,7 @@ attr_line_number_table_t *read_attribute_line_number_table() {
     return a;
 }
 
-attr_source_file_t *read_attribute_source_file() {
+attr_source_file_t *read_attribute_source_file(void) {
     attr_source_file_t *a = ALLOCATE(attr_source_file_t, 1);
     read_bytes(&a->sourcefile_index, 2);
     return a;
@@ -222,9 +247,15 @@ void read_attributes(class_file_t *cf, uint16_t count, attribute_t **attributes)
 }
 
 method_t *get_methodref(class_file_t *cf, uint16_t index) {
-    constant_tag_t tag = cf->constant_pool[index - 1].tag;
-    assert(tag == CONSTANT_METHOD_REF && "Constant is not MethodRef");
-    return &cf->constant_pool[index - 1].info.method_ref_info;
+    constant_method_ref_info_t method_ref_info = get_constant(cf, index, CONSTANT_METHOD_REF)->info.method_ref_info;
+    // lookup class & NameAndType in constant pool
+    //constant_class_info_t class = get_constant(cf, method_ref_info.class_index, CONSTANT_CLASS);
+    constant_name_and_type_info_t name_and_type = get_constant(
+            cf, method_ref_info.name_and_type_index, CONSTANT_NAME_AND_TYPE
+            )->info.name_and_type_info;
+    char *method_name = get_constant_utf8(cf, name_and_type.name_index);
+    char *method_desc = get_constant_utf8(cf, name_and_type.descriptor_index);
+    return get_class_method(cf, method_name, method_desc);
 }
 
 void read_interfaces(uint16_t count, interface_t *interfaces) {
