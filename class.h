@@ -193,6 +193,11 @@ typedef struct attribute_t {
     } info;
 } attribute_t;
 
+
+#define IS_ATTR_CODE(attr)    ((attr).tag == ATTR_CODE)
+
+#define AS_ATTR_CODE(attr)    ((attr)->info.attr_code)
+
 typedef struct interface_t {
 
 } interface_t;
@@ -270,5 +275,7 @@ typedef struct class_file_t {
 } class_file_t;
 
 method_t *get_class_method(class_file_t *class, const char *name, const char* descriptor);
+
+attribute_t *get_attribute_by_tag(int16_t attributes_count, attribute_t *attributes, attribute_tag_t tag);
 
 #endif //LIL_JVM_CLASS_H

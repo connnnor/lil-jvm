@@ -142,17 +142,16 @@ static void reset_stack() {
 
 interpret_result_t interpret(class_file_t *class) {
     reset_stack();
-    // hard coding this for one class file (AddMain.class)
-    attr_code_t *code_attr = class->methods[2].attributes[0].info.attr_code;
-    frame_t *frame = push_frame(code_attr->code, class, 2, 1);
-    vm.frames[0] = *frame;
-    vm.stack_top = vm.stack;
     // find main method
     method_t *main = get_class_method(class, "main", "([Ljava/lang/String;)V");
     if (main == NULL) {
         runtime_error("error cannot find main method\n");
     }
-    //
+
+    attr_code_t *code_attr = AS_ATTR_CODE(get_attribute_by_tag(main->attribute_count, main->attributes, ATTR_CODE));
+    frame_t *frame = push_frame(code_attr->code, class, 2, 1);
+    vm.frames[0] = *frame;
+    vm.stack_top = vm.stack;
     return run();
 }
 

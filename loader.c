@@ -127,6 +127,15 @@ attribute_tag_t get_attribute_tag(char *str) {
 
 void read_attributes(class_file_t *cf, uint16_t count, attribute_t **attributes);
 
+attribute_t *get_attribute_by_tag(int16_t attributes_count, attribute_t *attributes, attribute_tag_t tag) {
+    for (int16_t i = 0; i < attributes_count; i++) {
+        if (attributes[i].tag == tag) {
+            return &attributes[i];
+        }
+    }
+    return NULL;
+}
+
 attr_code_t *read_attribute_code(class_file_t *cf) {
     attr_code_t *a = ALLOCATE(attr_code_t, 1);
     read_bytes(&a->max_stack, 2);
