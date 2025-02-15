@@ -71,6 +71,7 @@ int invoke_inst(const char *name, uint8_t *code, uint32_t offset) {
 int disassemble_inst(uint8_t *code, uint32_t offset, int indent_level) {
     uint8_t opcode = code[offset];
     printf("%*s", indent_level * 2, "");
+    printf("(0x%02x) ", opcode);
     switch(opcode) {
         case OP_ICONST1:
             return simple_inst("iconst1", offset);

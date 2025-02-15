@@ -20,7 +20,7 @@ typedef enum interpret_result_t {
     INTERPRET_RUNTIME_ERROR
 } interpret_result_t;
 
-interpret_result_t interpret(class_file_t *class_file);
+interpret_result_t interpret(class_file_t *class);
 static interpret_result_t run();
 
 #endif //LIL_JVM_VM_H

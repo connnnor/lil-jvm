@@ -269,4 +269,6 @@ typedef struct class_file_t {
     attribute_t *attributes;
 } class_file_t;
 
+method_t *get_class_method(class_file_t *class, const char *name, const char* descriptor);
+
 #endif //LIL_JVM_CLASS_H

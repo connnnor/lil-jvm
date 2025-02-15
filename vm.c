@@ -1,10 +1,35 @@
 #include "vm.h"
+#include <stdarg.h>
 #include "common.h"
 #include "memory.h"
 #include "debug.h"
 #include "class.h"
 
 vm_t vm;
+
+static void runtime_error(const char * format, ...);
+
+static void runtime_error(const char * format, ...) {
+    va_list args;
+    va_start(args, format);
+    vfprintf(stderr, format, args);
+    va_end(args);
+    fputs("\n", stderr);
+
+//    for (int i = vm.frame_count - 1; i >= 0; i--) {
+//        call_frame_t *frame = &vm.frames[i];
+//        obj_function_t *function = frame->closure->function;
+//        size_t instruction = frame->ip - frame->closure->function->chunk.code - 1;
+//        fprintf(stderr, "[line %d] in ", function->chunk.lines[instruction]);
+//        if (function->name == NULL) {
+//            fprintf(stderr, "script\n");
+//        } else {
+//            fprintf(stderr, "%s()\n", function->name->chars);
+//        }
+//    }
+
+    exit(-1);
+}
 
 void print_value(value_t value) {
     switch(value.type) {
@@ -24,6 +49,13 @@ void push(value_t value) {
 }
 
 value_t pop() {
+    vm.stack_top--;
+    return *vm.stack_top;
+}
+
+value_t pop_word() {
+
+
     vm.stack_top--;
     return *vm.stack_top;
 }
@@ -52,6 +84,11 @@ static interpret_result_t run() {
     frame->stack_top = vm.stack_top;
 //#define READ_BYTE() (*frame[->ip++)
 #define READ_BYTE() (frame->code[frame->pc++])
+
+#define READ_SHORT() \
+   (frame->pc += 2, \
+   (uint16_t) ((frame->code[frame->pc - 2] << 8) | frame->code[-frame->pc - 1]))
+
     for (;;) {
 #ifdef DEBUG_TRACE_EXECUTION
         printf("          ");
@@ -73,20 +110,26 @@ static interpret_result_t run() {
 //                return simple_inst("aload_0", offset);
 //            case OP_INVOKE_SPECIAL:
 //                return invoke_inst("invokespecial", code, offset);
-//            case OP_INVOKE_STATIC:
-//                return invoke_inst("invokestatic", code, offset);
+            case OP_INVOKE_STATIC: {
+                uint16_t index = READ_SHORT();
+                //lookup
+                break;
+            }
 //            case OP_ILOAD_0:
 //                return simple_inst("iload_0", offset);
 //            case OP_ILOAD_1:
 //                return simple_inst("iload_1", offset);
-//            case OP_IADD:
-//                return simple_inst("iadd", offset);
+            case OP_IADD: {
+                int a = AS_INT(pop());
+                int b = AS_INT(pop());
+                push(INT_VAL(a + b));
+            }
 //            case OP_IRETURN:
 //                return simple_inst("ireturn", offset);
 //            case OP_RETURN:
 //                return simple_inst("return", offset);
             default:
-                printf("Unknown opcode %d\n", inst);
+                printf("Unknown opcode %d (0x%02x)\n", inst, inst);
                 return INTERPRET_RUNTIME_ERROR;
         }
     }
@@ -97,15 +140,19 @@ static void reset_stack() {
     vm.frame_count = 0;
 }
 
-interpret_result_t interpret(class_file_t *class_file) {
+interpret_result_t interpret(class_file_t *class) {
     reset_stack();
     // hard coding this for one class file (AddMain.class)
-    attr_code_t *code_attr = class_file->methods[2].attributes[0].info.attr_code;
-    frame_t *frame = push_frame(code_attr->code, class_file, 2, 1);
+    attr_code_t *code_attr = class->methods[2].attributes[0].info.attr_code;
+    frame_t *frame = push_frame(code_attr->code, class, 2, 1);
     vm.frames[0] = *frame;
     vm.stack_top = vm.stack;
-//    frame_t *frame = push_frame(NULL, code_attr->code, class_file, 2, 1);
-
+    // find main method
+    method_t *main = get_class_method(class, "main", "([Ljava/lang/String;)V");
+    if (main == NULL) {
+        runtime_error("error cannot find main method\n");
+    }
+    //
     return run();
 }
 

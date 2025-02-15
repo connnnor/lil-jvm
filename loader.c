@@ -2,6 +2,9 @@
 #include <stdio.h>
 #include "memory.h"
 #include "debug.h"
+#include <string.h>
+
+#define NULL ((void *)0)
 
 #define DEBUG 1
 
@@ -19,6 +22,17 @@ char * get_classname(class_file_t *cf, uint16_t index) {
     uint16_t name_index = class_info.name_index;
     return get_constant_utf8(cf, name_index);
 }
+
+method_t *get_class_method(class_file_t *class, const char *name, const char* descriptor) {
+    for (int i = 0; i < class->methods_count; i++) {
+        if (strcmp(name, get_constant_utf8(class, class->methods[i].name_index)) == 0 &&
+            strcmp(name, get_constant_utf8(class, class->methods[i].name_index)) == 0) {
+            return &class->methods[i];
+        }
+    }
+    return NULL;
+}
+
 
 // read unsigned integer into dst
 
