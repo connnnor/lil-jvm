@@ -79,6 +79,27 @@ static uint8_t read_byte(void) {
 //    return out;
 //}
 
+static char *constant_tag_map[] = {
+        [CONSTANT_CLASS] = "CONSTANT_Class",
+        [CONSTANT_FIELDREF] = "CONSTANT_Fieldref",
+        [CONSTANT_METHOD_REF] = "CONSTANT_Methodref",
+        [CONSTANT_INTERFACE_METHOD_REF] = "CONSTANT_InterfaceMethodref",
+        [CONSTANT_STRING] = "CONSTANT_String",
+        [CONSTANT_INTEGER] = "CONSTANT_Integer",
+        [CONSTANT_FLOAT] = "CONSTANT_Float",
+        [CONSTANT_LONG] = "CONSTANT_Long",
+        [CONSTANT_DOUBLE] = "CONSTANT_Double",
+        [CONSTANT_NAME_AND_TYPE] = "CONSTANT_NameAndType",
+        [CONSTANT_UTF8] = "CONSTANT_Utf8",
+        [CONSTANT_METHOD_HANDLE] = "CONSTANT_MethodHandle",
+        [CONSTANT_METHOD_TYPE] = "CONSTANT_MethodType",
+        [CONSTANT_UNKNOWN] = "",
+};
+
+char *get_constant_tag_name(constant_tag_t tag) {
+    return constant_tag_map[tag];
+}
+
 void read_constant_pool(uint16_t count, constant_pool_t **constant_pool) {
     constant_pool_t *cp = ALLOCATE(constant_pool_t, count);
     // constant pool count is number of entries PLUS ONE
@@ -86,24 +107,31 @@ void read_constant_pool(uint16_t count, constant_pool_t **constant_pool) {
         uint8_t tag = read_byte();
         cp[i].tag = tag;
         switch(tag) {
-            case CONSTANT_UTF8:
-                read_bytes(&cp[i].info.utf8_info.length, 2);
-                cp[i].info.utf8_info.bytes = copy_string((char*) current, cp[i].info.utf8_info.length);
-                current += cp[i].info.utf8_info.length;
-                break;
             case CONSTANT_CLASS:
                 read_bytes(&cp[i].info.class_info.name_index, 2);
+                break;
+            case CONSTANT_FIELDREF:
+                read_bytes(&cp[i].info.field_ref_info.class_index, 2);
+                read_bytes(&cp[i].info.field_ref_info.name_and_type_index, 2);
                 break;
             case CONSTANT_METHOD_REF:
                 read_bytes(&cp[i].info.method_ref_info.class_index, 2);
                 read_bytes(&cp[i].info.method_ref_info.name_and_type_index, 2);
                 break;
+            case CONSTANT_STRING:
+                read_bytes(&cp[i].info.string_info.string_index, 2);
+                break;
             case CONSTANT_NAME_AND_TYPE:
                 read_bytes(&cp[i].info.name_and_type_info.name_index, 2);
                 read_bytes(&cp[i].info.name_and_type_info.descriptor_index, 2);
                 break;
+            case CONSTANT_UTF8:
+                read_bytes(&cp[i].info.utf8_info.length, 2);
+                cp[i].info.utf8_info.bytes = copy_string((char*) current, cp[i].info.utf8_info.length);
+                current += cp[i].info.utf8_info.length;
+                break;
             default:
-                printf("Error: Unknown tag 0x%02d for constant pool entry %d", tag, i);
+                printf("Error: Unknown tag 0x%02d for constant pool entry %d (%s)", tag, i + 1, get_constant_tag_name(tag));
                 exit(-1);
         }
     }
@@ -147,18 +175,6 @@ attribute_t *get_attribute_by_tag(int16_t attributes_count, attribute_t *attribu
         }
     }
     return NULL;
-}
-
-static char *constant_tag_map[] = {
-        [CONSTANT_UTF8] = "Utf8",
-        [CONSTANT_CLASS] = "Class",
-        [CONSTANT_METHOD_REF] = "Methodref",
-        [CONSTANT_NAME_AND_TYPE] = "NameAndType",
-        [CONSTANT_UNKNOWN] = NULL
-};
-
-char *get_constant_tag_name(constant_tag_t tag) {
-    return constant_tag_map[tag];
 }
 
 

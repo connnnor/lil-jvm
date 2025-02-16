@@ -68,10 +68,19 @@ typedef enum opcode_t {
 
 // only doing ones i need for now
 typedef enum constant_tag_t {
-    CONSTANT_UTF8          =  1,
-    CONSTANT_CLASS         =  7,
-    CONSTANT_METHOD_REF    = 10,
-    CONSTANT_NAME_AND_TYPE = 12,
+    CONSTANT_CLASS                =  7,
+    CONSTANT_FIELDREF             =  9,
+    CONSTANT_METHOD_REF           = 10,
+    CONSTANT_INTERFACE_METHOD_REF = 11,
+    CONSTANT_STRING               =  8,
+    CONSTANT_INTEGER              =  3,
+    CONSTANT_FLOAT                =  4,
+    CONSTANT_LONG                 =  5,
+    CONSTANT_DOUBLE               =  6,
+    CONSTANT_NAME_AND_TYPE        = 12,
+    CONSTANT_UTF8                 =  1,
+    CONSTANT_METHOD_HANDLE        = 15,
+    CONSTANT_METHOD_TYPE          = 16,
     CONSTANT_UNKNOWN
 } constant_tag_t;
 
@@ -113,13 +122,30 @@ typedef struct constant_name_and_type_info_t {
     uint16_t descriptor_index;
 } constant_name_and_type_info_t;
 
+typedef struct constant_string_info_t {
+    uint16_t string_index;
+} constant_string_info_t;
+
+//CONSTANT_Fieldref_info {
+//  u1 tag;
+//  u2 class_index;
+//  u2 name_and_type_index;
+//}
+
+typedef struct constant_field_ref_info_t {
+    uint16_t class_index;
+    uint16_t name_and_type_index;
+} constant_field_ref_info_t;
+
 typedef struct constant_pool_t {
     uint8_t tag;
     union {
         constant_utf8_info_t utf8_info;
         constant_class_info_t class_info;
         constant_method_ref_info_t method_ref_info;
+        constant_field_ref_info_t field_ref_info;
         constant_name_and_type_info_t name_and_type_info;
+        constant_string_info_t string_info;
     } info;
 } constant_pool_t;
 
