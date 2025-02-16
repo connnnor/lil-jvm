@@ -80,19 +80,19 @@ static uint8_t read_byte(void) {
 //}
 
 static char *constant_tag_map[] = {
-        [CONSTANT_CLASS] = "CONSTANT_Class",
-        [CONSTANT_FIELDREF] = "CONSTANT_Fieldref",
-        [CONSTANT_METHOD_REF] = "CONSTANT_Methodref",
-        [CONSTANT_INTERFACE_METHOD_REF] = "CONSTANT_InterfaceMethodref",
-        [CONSTANT_STRING] = "CONSTANT_String",
-        [CONSTANT_INTEGER] = "CONSTANT_Integer",
-        [CONSTANT_FLOAT] = "CONSTANT_Float",
-        [CONSTANT_LONG] = "CONSTANT_Long",
-        [CONSTANT_DOUBLE] = "CONSTANT_Double",
-        [CONSTANT_NAME_AND_TYPE] = "CONSTANT_NameAndType",
-        [CONSTANT_UTF8] = "CONSTANT_Utf8",
-        [CONSTANT_METHOD_HANDLE] = "CONSTANT_MethodHandle",
-        [CONSTANT_METHOD_TYPE] = "CONSTANT_MethodType",
+        [CONSTANT_CLASS] = "Class",
+        [CONSTANT_FIELDREF] = "Fieldref",
+        [CONSTANT_METHOD_REF] = "Methodref",
+        [CONSTANT_INTERFACE_METHOD_REF] = "InterfaceMethodref",
+        [CONSTANT_STRING] = "String",
+        [CONSTANT_INTEGER] = "Integer",
+        [CONSTANT_FLOAT] = "Float",
+        [CONSTANT_LONG] = "Long",
+        [CONSTANT_DOUBLE] = "Double",
+        [CONSTANT_NAME_AND_TYPE] = "NameAndType",
+        [CONSTANT_UTF8] = "Utf8",
+        [CONSTANT_METHOD_HANDLE] = "MethodHandle",
+        [CONSTANT_METHOD_TYPE] = "MethodType",
         [CONSTANT_UNKNOWN] = "",
 };
 
@@ -178,11 +178,15 @@ attribute_t *get_attribute_by_tag(int16_t attributes_count, attribute_t *attribu
 }
 
 
+constant_pool_t *get_constant(class_file_t *cf, uint16_t index) {
+    return &cf->constant_pool[index - 1];
+}
+
 // return entry from constant pool and verify it has expected tag
-constant_pool_t *get_constant(class_file_t *cf, uint16_t index, constant_tag_t expected) {
+constant_pool_t *get_constant_exp(class_file_t *cf, uint16_t index, constant_tag_t expected) {
     constant_tag_t actual = cf->constant_pool[index - 1].tag;
-    if (actual != expected) {
-        runtime_error("get_constant index = %d. Expected tag %s but found %s\n",
+    if (expected != CONSTANT_UNKNOWN && actual != expected) {
+        runtime_error("get_constant_exp index = %d. Expected tag %s but found %s\n",
                       get_constant_tag_name(expected),
                       get_constant_tag_name(actual));
     }
@@ -266,12 +270,12 @@ void read_attributes(class_file_t *cf, uint16_t count, attribute_t **attributes)
 }
 
 method_t *get_methodref(class_file_t *cf, uint16_t index) {
-    constant_method_ref_info_t method_ref_info = get_constant(cf, index, CONSTANT_METHOD_REF)->info.method_ref_info;
+    constant_method_ref_info_t method_ref_info = get_constant_exp(cf, index, CONSTANT_METHOD_REF)->info.method_ref_info;
     // lookup class & NameAndType in constant pool
-    //constant_class_info_t class = get_constant(cf, method_ref_info.class_index, CONSTANT_CLASS);
-    constant_name_and_type_info_t name_and_type = get_constant(
+    //constant_class_info_t class = get_constant_exp(cf, method_ref_info.class_index, CONSTANT_CLASS);
+    constant_name_and_type_info_t name_and_type = get_constant_exp(
             cf, method_ref_info.name_and_type_index, CONSTANT_NAME_AND_TYPE
-            )->info.name_and_type_info;
+    )->info.name_and_type_info;
     char *method_name = get_constant_utf8(cf, name_and_type.name_index);
     char *method_desc = get_constant_utf8(cf, name_and_type.descriptor_index);
     return get_class_method(cf, method_name, method_desc);

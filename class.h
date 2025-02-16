@@ -56,12 +56,15 @@ typedef struct value_t {
 typedef enum opcode_t {
     OP_ICONST1 = 0x04,
     OP_ICONST2 = 0x05,
+    OP_LDC     = 0x12,
     OP_ILOAD_0 = 0x1a,
     OP_ILOAD_1 = 0x1b,
     OP_ALOAD_0 = 0x2a,
     OP_IADD    = 0x60,
     OP_IRETURN = 0xac,
     OP_RETURN  = 0xb1,
+    OP_GET_STATIC = 0xb2,
+    OP_INVOKE_VIRTUAL = 0xb6,
     OP_INVOKE_SPECIAL = 0xb7,
     OP_INVOKE_STATIC = 0xb8
 } opcode_t;
@@ -305,7 +308,11 @@ void read_class_file(uint8_t *bytes, class_file_t *class_file);
 char * get_constant_utf8(class_file_t *cf, uint16_t index);
 char * get_classname(class_file_t *cf, uint16_t index);
 
-constant_pool_t *get_constant(class_file_t *cf, uint16_t index, constant_tag_t expected);
+constant_pool_t *get_constant(class_file_t *cf, uint16_t index);
+
+constant_pool_t *get_constant_exp(class_file_t *cf, uint16_t index, constant_tag_t expected);
 method_t *get_methodref(class_file_t *cf, uint16_t index);
+
+char *get_constant_tag_name(constant_tag_t tag);
 
 #endif //LIL_JVM_CLASS_H

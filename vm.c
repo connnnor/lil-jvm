@@ -141,7 +141,7 @@ interpret_result_t run(void) {
         printf(" ]");
     }
     printf("\n");
-    disassemble_inst(frame->code, frame->pc, 0);
+    disassemble_inst(frame->class_file, frame->code, frame->pc, 0);
 #endif
         uint8_t inst;
         switch (inst = READ_BYTE()) {
@@ -171,11 +171,12 @@ interpret_result_t run(void) {
             }
             case OP_INVOKE_STATIC: {
                 uint16_t index = READ_SHORT();
-                constant_method_ref_info_t method_ref_info = get_constant(frame->class_file, index, CONSTANT_METHOD_REF)->info.method_ref_info;
+                constant_method_ref_info_t method_ref_info = get_constant_exp(frame->class_file, index,
+                                                                              CONSTANT_METHOD_REF)->info.method_ref_info;
                 char *class_name = get_classname(frame->class_file, method_ref_info.class_index);
                 // lookup class & NameAndType in constant pool
-                //constant_class_info_t class = get_constant(cf, method_ref_info.class_index, CONSTANT_CLASS);
-                constant_name_and_type_info_t name_and_type = get_constant(
+                //constant_class_info_t class = get_constant_exp(cf, method_ref_info.class_index, CONSTANT_CLASS);
+                constant_name_and_type_info_t name_and_type = get_constant_exp(
                         frame->class_file, method_ref_info.name_and_type_index, CONSTANT_NAME_AND_TYPE
                 )->info.name_and_type_info;
                 char *method_name = get_constant_utf8(frame->class_file, name_and_type.name_index);

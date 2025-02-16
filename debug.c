@@ -66,14 +66,54 @@ int simple_inst(const char *name, uint32_t offset) {
     return offset + 1;
 }
 
-int invoke_inst(const char *name, uint8_t *code, uint32_t offset) {
-    // index = (indexbyte1 << 8) | indexbyte2
+void print_constant_info(class_file_t *cf, uint16_t index) {
+    constant_pool_t *constant = get_constant(cf, index);
+    switch (constant->tag) {
+        case CONSTANT_FIELDREF:
+            printf(" // %s ", get_constant_tag_name(CONSTANT_FIELDREF));
+            print_constant_info(cf, constant->info.field_ref_info.class_index);
+            printf(".");
+            print_constant_info(cf, constant->info.field_ref_info.name_and_type_index);
+            break;
+        case CONSTANT_METHOD_REF:
+            printf(" // %s ", get_constant_tag_name(CONSTANT_METHOD_REF));
+            print_constant_info(cf, constant->info.method_ref_info.class_index);
+            printf(".");
+            print_constant_info(cf, constant->info.method_ref_info.name_and_type_index);
+            break;
+        case CONSTANT_CLASS:
+            print_constant_info(cf, constant->info.class_info.name_index);
+            break;
+        case CONSTANT_NAME_AND_TYPE:
+            print_constant_info(cf, constant->info.name_and_type_info.name_index);
+            printf(":");
+            print_constant_info(cf, constant->info.name_and_type_info.descriptor_index);
+            break;
+        case CONSTANT_UTF8:
+            printf("%s", get_constant_utf8(cf, index));
+            break;
+    }
+}
+
+// instructions that have one byte index
+int byte_index_inst(class_file_t *cf, const char *name, uint8_t *code, uint32_t offset) {
+    uint8_t index = code[offset + 1];
+    printf("%02u: %-20s #%4u ", offset, name, index);
+    print_constant_info(cf, index);
+    printf("\n");
+    return offset + 2;
+}
+
+// instructions that have two byte index
+int word_index_inst(class_file_t *cf, const char *name, uint8_t *code, uint32_t offset) {
     uint16_t index = (code[offset + 1] << 8) | (code[offset + 2]);
-    printf("%02u: %-20s (Index = %4u)\n", offset, name, index);
+    printf("%02u: %-20s #%4u ", offset, name, index);
+    print_constant_info(cf, index);
+    printf("\n");
     return offset + 3;
 }
 
-int disassemble_inst(uint8_t *code, uint32_t offset, int indent_level) {
+int disassemble_inst(class_file_t *cf, uint8_t *code, uint32_t offset, int indent_level) {
     uint8_t opcode = code[offset];
     printf("%*s", indent_level * 2, "");
     printf("(0x%02x) ", opcode);
@@ -82,12 +122,18 @@ int disassemble_inst(uint8_t *code, uint32_t offset, int indent_level) {
             return simple_inst("iconst1", offset);
         case OP_ICONST2:
             return simple_inst("iconst2", offset);
+        case OP_LDC:
+            return byte_index_inst(cf, "ldc", code, offset);
         case OP_ALOAD_0:
             return simple_inst("aload_0", offset);
+        case OP_GET_STATIC:
+            return word_index_inst(cf, "getstatic", code, offset);
+        case OP_INVOKE_VIRTUAL:
+            return word_index_inst(cf, "invokevirtual", code, offset);
         case OP_INVOKE_SPECIAL:
-            return invoke_inst("invokespecial", code, offset);
+            return word_index_inst(cf, "invokespecial", code, offset);
         case OP_INVOKE_STATIC:
-            return invoke_inst("invokestatic", code, offset);
+            return word_index_inst(cf, "invokestatic", code, offset);
         case OP_ILOAD_0:
             return simple_inst("iload_0", offset);
         case OP_ILOAD_1:
@@ -104,9 +150,9 @@ int disassemble_inst(uint8_t *code, uint32_t offset, int indent_level) {
     }
 }
 
-void disassemble_code(uint8_t *code, uint32_t code_length, int indent_level) {
+void disassemble_code(class_file_t *cf, uint8_t *code, uint32_t code_length, int indent_level) {
     for (uint32_t offset = 0; offset < code_length;) {
-        offset = disassemble_inst(code, offset, indent_level + 1);
+        offset = disassemble_inst(cf, code, offset, indent_level + 1);
     }
 }
 
@@ -116,7 +162,7 @@ void dump_attr_code(class_file_t *cf, attribute_t *attr, int indent_level) {
     attr_code_t *code_attr = attr->info.attr_code;
     printf("%*s%-20s = 0x%04d\n", (indent_level + 1) * 2, "", "Max Stack", code_attr->max_stack);
     printf("%*s%-20s = 0x%04d\n", (indent_level + 1) * 2, "", "Max Locals", code_attr->max_locals);
-    disassemble_code(code_attr->code, code_attr->code_length, indent_level + 1);
+    disassemble_code(cf, code_attr->code, code_attr->code_length, indent_level + 1);
     printf("%*sException Table : %u\n", (indent_level + 0) * 2, "", code_attr->exception_table_length);
     for (uint16_t i = 0; i < code_attr->exception_table_length; i++) {
         printf("%*s%-20s = 0x%04x\n", (indent_level + 1) * 2, "", "Start PC", code_attr->exception_table[i].start_pc);
