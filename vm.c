@@ -206,20 +206,12 @@ interpret_result_t run(void) {
                 }
                 break;
             }
-//            case OP_ILOAD_0:
-//                return simple_inst("iload_0", offset);
-//            case OP_ILOAD_1:
-//                return simple_inst("iload_1", offset);
             case OP_IADD: {
                 int a = AS_INT(pop(frame));
                 int b = AS_INT(pop(frame));
                 push(frame, INT_VAL(a + b));
                 break;
             }
-//            case OP_IRETURN:
-//                return simple_inst("ireturn", offset);
-//            case OP_RETURN:
-//                return simple_inst("return", offset);
             default:
                 printf("Unknown opcode %d (0x%02x)\n", inst, inst);
                 return INTERPRET_RUNTIME_ERROR;
