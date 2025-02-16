@@ -170,8 +170,8 @@ interpret_result_t run(void) {
             }
             case OP_INVOKE_STATIC: {
                 uint16_t index = READ_SHORT();
-
                 constant_method_ref_info_t method_ref_info = get_constant(frame->class_file, index, CONSTANT_METHOD_REF)->info.method_ref_info;
+                char *class_name = get_classname(frame->class_file, method_ref_info.class_index);
                 // lookup class & NameAndType in constant pool
                 //constant_class_info_t class = get_constant(cf, method_ref_info.class_index, CONSTANT_CLASS);
                 constant_name_and_type_info_t name_and_type = get_constant(
@@ -181,7 +181,7 @@ interpret_result_t run(void) {
                 char *method_desc = get_constant_utf8(frame->class_file, name_and_type.descriptor_index);
                 method_t *method = get_class_method(frame->class_file, method_name, method_desc);
                 if (method == NULL) {
-                    runtime_error("invokestatic cannot  resolve method %s.%s\n", method_name, method_desc);
+                    runtime_error("invokestatic cannot  resolve method %s.%s:%s\n", class_name, method_name, method_desc);
                 }
                 // create new frame
                 attribute_t *attribute = get_attribute_by_tag(method->attribute_count, method->attributes, ATTR_CODE);
