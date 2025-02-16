@@ -4,6 +4,7 @@
 #include "memory.h"
 #include "debug.h"
 #include "class.h"
+#include "native.h"
 
 vm_t vm;
 
@@ -181,7 +182,13 @@ interpret_result_t run(void) {
                 char *method_desc = get_constant_utf8(frame->class_file, name_and_type.descriptor_index);
                 method_t *method = get_class_method(frame->class_file, method_name, method_desc);
                 if (method == NULL) {
-                    runtime_error("invokestatic cannot  resolve method %s.%s:%s\n", class_name, method_name, method_desc);
+                    native_fn_t *native_fn = get_native_fn(class_name, method_name, method_desc);
+                    if (native_fn == NULL) {
+                        runtime_error("invokestatic cannot  resolve method %s.%s:%s\n", class_name, method_name,
+                                      method_desc);
+                    }
+                    int num_args = 1;
+                    (*native_fn)(num_args, frame->stack_top - num_args);
                 }
                 // create new frame
                 attribute_t *attribute = get_attribute_by_tag(method->attribute_count, method->attributes, ATTR_CODE);

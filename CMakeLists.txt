@@ -10,4 +10,6 @@ add_executable(lil_jvm main.c
         class.c
         memory.c
         vm.c
-        vm.h)
+        vm.h
+        native.c
+        native.h)

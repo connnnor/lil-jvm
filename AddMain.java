@@ -3,7 +3,7 @@ public class AddMain {
         return a + b;
     }
 
-    static void main(String[] args){
+    public static void main(String[] args){
         System.exit(add(1, 2));
     }
 }
