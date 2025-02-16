@@ -122,7 +122,10 @@ interpret_result_t run(void) {
    (uint16_t) ((frame->code[frame->pc - 2] << 8) | frame->code[frame->pc - 1]))
 
     for (;;) {
+        frame = vm.frames[vm.frame_count - 1];
 #ifdef DEBUG_TRACE_EXECUTION
+        printf("\n");
+        printf("    # Frames = %d", vm.frame_count);
         printf("    Stack ");
     for (value_t *slot = frame->stack; slot < frame->stack_top; slot++) {
       printf("[ ");
@@ -139,7 +142,6 @@ interpret_result_t run(void) {
     printf("\n");
     disassemble_inst(frame->code, frame->pc, 0);
 #endif
-        frame = vm.frames[vm.frame_count - 1];
         uint8_t inst;
         switch (inst = READ_BYTE()) {
             case OP_ICONST1:
@@ -154,6 +156,14 @@ interpret_result_t run(void) {
 //                return simple_inst("aload_0", offset);
 //            case OP_INVOKE_SPECIAL:
 //                return invoke_inst("invokespecial", code, offset);
+            case OP_IRETURN: {
+                // If no exception is thrown, value is popped from the operand stack of the current frame (§2.6)
+                // and pushed onto the operand stack of the frame of the invoker
+                frame_t *invoker_frame = vm.frames[vm.frame_count - 2];
+                push(invoker_frame, pop(frame));
+                pop_frame(frame);
+                break;
+            }
             case OP_RETURN: {
                 pop_frame(frame);
                 break;
@@ -170,6 +180,9 @@ interpret_result_t run(void) {
                 char *method_name = get_constant_utf8(frame->class_file, name_and_type.name_index);
                 char *method_desc = get_constant_utf8(frame->class_file, name_and_type.descriptor_index);
                 method_t *method = get_class_method(frame->class_file, method_name, method_desc);
+                if (method == NULL) {
+                    runtime_error("invokestatic cannot  resolve method %s.%s\n", method_name, method_desc);
+                }
                 // create new frame
                 attribute_t *attribute = get_attribute_by_tag(method->attribute_count, method->attributes, ATTR_CODE);
                 attr_code_t *code_attr = AS_ATTR_CODE(attribute);
