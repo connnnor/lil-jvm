@@ -66,32 +66,72 @@ int simple_inst(const char *name, uint32_t offset) {
     return offset + 1;
 }
 
-void print_constant_info(class_file_t *cf, uint16_t index) {
+void print_constant_info(class_file_t *cf, constant_pool_t *constant) {
+    switch (constant->tag) {
+        case CONSTANT_FIELDREF:
+            printf(" // %s ", get_constant_tag_name(CONSTANT_FIELDREF));
+            print_constant_info_at(cf, constant->info.field_ref_info.class_index);
+            printf(".");
+            print_constant_info_at(cf, constant->info.field_ref_info.name_and_type_index);
+            break;
+        case CONSTANT_METHOD_REF:
+            printf(" // %s ", get_constant_tag_name(CONSTANT_METHOD_REF));
+            print_constant_info_at(cf, constant->info.method_ref_info.class_index);
+            printf(".");
+            print_constant_info_at(cf, constant->info.method_ref_info.name_and_type_index);
+            break;
+        case CONSTANT_CLASS:
+            print_constant_info_at(cf, constant->info.class_info.name_index);
+            break;
+        case CONSTANT_NAME_AND_TYPE:
+            print_constant_info_at(cf, constant->info.name_and_type_info.name_index);
+            printf(":");
+            print_constant_info_at(cf, constant->info.name_and_type_info.descriptor_index);
+            break;
+        case CONSTANT_UTF8:
+            printf("%s", constant->info.utf8_info.bytes);
+            break;
+        case CONSTANT_STRING:
+            printf(" // %s ", get_constant_tag_name(CONSTANT_STRING));
+            print_constant_info_at(cf, constant->info.string_info.string_index);
+            break;
+        default:
+            printf(" // %s TODO ADD DEBUG PRINT ", get_constant_tag_name(constant->tag));
+    }
+}
+
+void print_constant_info_at(class_file_t *cf, uint16_t index) {
     constant_pool_t *constant = get_constant(cf, index);
     switch (constant->tag) {
         case CONSTANT_FIELDREF:
             printf(" // %s ", get_constant_tag_name(CONSTANT_FIELDREF));
-            print_constant_info(cf, constant->info.field_ref_info.class_index);
+            print_constant_info_at(cf, constant->info.field_ref_info.class_index);
             printf(".");
-            print_constant_info(cf, constant->info.field_ref_info.name_and_type_index);
+            print_constant_info_at(cf, constant->info.field_ref_info.name_and_type_index);
             break;
         case CONSTANT_METHOD_REF:
             printf(" // %s ", get_constant_tag_name(CONSTANT_METHOD_REF));
-            print_constant_info(cf, constant->info.method_ref_info.class_index);
+            print_constant_info_at(cf, constant->info.method_ref_info.class_index);
             printf(".");
-            print_constant_info(cf, constant->info.method_ref_info.name_and_type_index);
+            print_constant_info_at(cf, constant->info.method_ref_info.name_and_type_index);
             break;
         case CONSTANT_CLASS:
-            print_constant_info(cf, constant->info.class_info.name_index);
+            print_constant_info_at(cf, constant->info.class_info.name_index);
             break;
         case CONSTANT_NAME_AND_TYPE:
-            print_constant_info(cf, constant->info.name_and_type_info.name_index);
+            print_constant_info_at(cf, constant->info.name_and_type_info.name_index);
             printf(":");
-            print_constant_info(cf, constant->info.name_and_type_info.descriptor_index);
+            print_constant_info_at(cf, constant->info.name_and_type_info.descriptor_index);
             break;
         case CONSTANT_UTF8:
             printf("%s", get_constant_utf8(cf, index));
             break;
+        case CONSTANT_STRING:
+            printf(" // %s ", get_constant_tag_name(CONSTANT_STRING));
+            print_constant_info_at(cf, constant->info.string_info.string_index);
+            break;
+        default:
+            printf(" // %s TODO ADD DEBUG PRINT ", get_constant_tag_name(constant->tag));
     }
 }
 
@@ -99,7 +139,7 @@ void print_constant_info(class_file_t *cf, uint16_t index) {
 int byte_index_inst(class_file_t *cf, const char *name, uint8_t *code, uint32_t offset) {
     uint8_t index = code[offset + 1];
     printf("%02u: %-20s #%4u ", offset, name, index);
-    print_constant_info(cf, index);
+    print_constant_info_at(cf, index);
     printf("\n");
     return offset + 2;
 }
@@ -108,7 +148,7 @@ int byte_index_inst(class_file_t *cf, const char *name, uint8_t *code, uint32_t 
 int word_index_inst(class_file_t *cf, const char *name, uint8_t *code, uint32_t offset) {
     uint16_t index = (code[offset + 1] << 8) | (code[offset + 2]);
     printf("%02u: %-20s #%4u ", offset, name, index);
-    print_constant_info(cf, index);
+    print_constant_info_at(cf, index);
     printf("\n");
     return offset + 3;
 }

@@ -22,6 +22,8 @@ typedef enum value_type_t {
     // TODO return address
 } value_type_t;
 
+struct constant_pool_t;
+
 typedef struct value_t {
     value_type_t type;
     union {
@@ -30,6 +32,7 @@ typedef struct value_t {
         int64_t llong;
         float ffloat;
         double ddouble;
+        struct constant_pool_t *reference;
         // TODO reference
         // TODO return address
     } as;
@@ -40,18 +43,21 @@ typedef struct value_t {
 #define IS_LONG(value)    ((value).type == VAL_LONG)
 #define IS_FLOAT(value)   ((value).type == VAL_FLOAT)
 #define IS_DOUBLE(value)  ((value).type == VAL_DOUBLE)
+#define IS_REFERENCE(value)  ((value).type == VAL_REF)
 
 #define AS_BOOL(value)    ((value).as.boolean)
 #define AS_INT(value)     ((value).as.integer)
 #define AS_LONG(value)    ((value).as.llong)
 #define AS_FLOAT(value)   ((value).as.ffloat)
 #define AS_DOUBLE(value)  ((value).as.ddouble)
+#define AS_REFERENCE(value)  ((value).as.reference)
 
 #define BOOL_VAL(value)  ((value_t) {VAL_BOOL,    {.boolean = value}})
 #define INT_VAL(value)   ((value_t) {VAL_INT,     {.integer = value}})
 #define LONG_VAL         ((value_t) {VAL_LONG,    {.llong = value}})
 #define FLOAT_VAL(value) ((value_t) {VAL_FLOAT,   {.ffloat = value}})
 #define DOUBLE_VAL(value) ((value_t) {VAL_DOUBLE, {.ddouble = value}})
+#define REFERENCE_VAL(value) ((value_t) {VAL_REF, {.reference = value}})
 
 typedef enum opcode_t {
     OP_ICONST1 = 0x04,
@@ -141,7 +147,8 @@ typedef struct constant_field_ref_info_t {
 } constant_field_ref_info_t;
 
 typedef struct constant_pool_t {
-    uint8_t tag;
+//    uint8_t tag;
+    constant_tag_t tag;
     union {
         constant_utf8_info_t utf8_info;
         constant_class_info_t class_info;
@@ -314,5 +321,10 @@ constant_pool_t *get_constant_exp(class_file_t *cf, uint16_t index, constant_tag
 method_t *get_methodref(class_file_t *cf, uint16_t index);
 
 char *get_constant_tag_name(constant_tag_t tag);
+
+typedef struct reference_t {
+    //constant_tag_t tag;
+    constant_pool_t *constant;
+} reference_t;
 
 #endif //LIL_JVM_CLASS_H

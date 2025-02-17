@@ -18,7 +18,7 @@ void runtime_error(const char * format, ...) {
     fputs("\n", stderr);
 
 //    for (int i = vm.frame_count - 1; i >= 0; i--) {
-//        call_frame_t *frame = &vm.frames[i];
+//        frame_t *frame = &vm.frames[i];
 //        obj_function_t *function = frame->closure->function;
 //        size_t instruction = frame->ip - frame->closure->function->chunk.code - 1;
 //        fprintf(stderr, "[line %d] in ", function->chunk.lines[instruction]);
@@ -32,6 +32,15 @@ void runtime_error(const char * format, ...) {
     exit(-1);
 }
 
+void call_native(frame_t *frame, native_fn_info_t *fn_info) {
+//    if (native_fn_info->arity != arg_count) {
+//        runtime_error("Expected %d arguments but got %d.",
+//                      native_fn_info->arity, arg_count);
+//    }
+    native_fn_t native_fn = fn_info->native_fn;
+    (*native_fn)(frame, fn_info->arity, frame->stack_top - fn_info->arity);
+}
+
 // put value in frame's local variable table at index i
 void frame_store_local(frame_t *f, value_t v, int i) {
     f->locals[i] = v;
@@ -41,7 +50,7 @@ value_t frame_get_local(frame_t *f, int i) {
     return f->locals[i];
 }
 
-void print_value(value_t value) {
+void print_value(frame_t *f, value_t value) {
     switch(value.type) {
         case VAL_BOOL:
             printf(AS_BOOL(value) ? "true" : "false");
@@ -50,9 +59,9 @@ void print_value(value_t value) {
         case VAL_LONG:   printf("%ld", AS_LONG(value)); break;
         case VAL_FLOAT:  printf("%f",  AS_FLOAT(value)); break;
         case VAL_DOUBLE: printf("%f",  AS_DOUBLE(value)); break;
-        case VAL_ADDR:
+        case VAL_ADDR: printf("TODO VAL_ADDR: print_value"); break;
         case VAL_REF:
-            printf("TODO add VAL_ADDR & VAL_REF: print_value");
+            print_constant_info(f->class_file, value.as.reference);
     }
 }
 
@@ -98,15 +107,15 @@ frame_t *push_frame(uint8_t *code, class_file_t *class_file, uint16_t max_stack,
 }
 
 int *pop_frame(frame_t *frame) {
-    if (vm.frame_count <= 1) {
-        runtime_error("popping last frame");
-    }
-
     FREE(value_t, frame->locals);
     FREE(value_t, frame->stack);
     FREE(frame_t, frame);
 
     vm.frame_count--;
+
+    if (vm.frame_count == 0) {
+        exit(0);
+    }
 
     return 0;
 }
@@ -130,14 +139,14 @@ interpret_result_t run(void) {
         printf("    Stack ");
     for (value_t *slot = frame->stack; slot < frame->stack_top; slot++) {
       printf("[ ");
-      print_value(*slot);
+      print_value(frame, *slot);
       printf(" ]");
     }
     printf("\n");
     printf("   Locals ");
     for (uint16_t i = 0; i < frame->max_locals; i++) {
         printf("[ ");
-        print_value(frame->locals[i]);
+        print_value(frame, frame->locals[i]);
         printf(" ]");
     }
     printf("\n");
@@ -145,11 +154,25 @@ interpret_result_t run(void) {
 #endif
         uint8_t inst;
         switch (inst = READ_BYTE()) {
-            case OP_ICONST1:
+            case OP_ICONST1: // 0x04
                 push(frame, INT_VAL(1)); break;
-            case OP_ICONST2:
+            case OP_ICONST2: // 0x05
                 push(frame, INT_VAL(2)); break;
-            case OP_ILOAD_0:
+            case OP_LDC: { // 0x12
+                uint8_t index = READ_BYTE();
+                constant_pool_t *constant = get_constant(frame->class_file, index);
+                // if constant type
+                switch(constant->tag) {
+                    case CONSTANT_STRING: {
+                        push(frame, REFERENCE_VAL(constant));
+                        break;
+                    }
+                    default:
+                        runtime_error("LDC unimplemented for constant type %s", get_constant_tag_name(constant->tag));
+                }
+                break;
+            }
+            case OP_ILOAD_0: // 0x1a
                 push(frame, frame_get_local(frame, 0)); break;
             case OP_ILOAD_1:
                 push(frame, frame_get_local(frame, 1)); break;
@@ -157,7 +180,7 @@ interpret_result_t run(void) {
 //                return simple_inst("aload_0", offset);
 //            case OP_INVOKE_SPECIAL:
 //                return invoke_inst("invokespecial", code, offset);
-            case OP_IRETURN: {
+            case OP_IRETURN: { // 0xac
                 // If no exception is thrown, value is popped from the operand stack of the current frame (§2.6)
                 // and pushed onto the operand stack of the frame of the invoker
                 frame_t *invoker_frame = vm.frames[vm.frame_count - 2];
@@ -165,11 +188,19 @@ interpret_result_t run(void) {
                 pop_frame(frame);
                 break;
             }
-            case OP_RETURN: {
+            case OP_RETURN: { // 0xb1
                 pop_frame(frame);
                 break;
             }
-            case OP_INVOKE_STATIC: {
+            case OP_GET_STATIC: { // 0xb2
+                uint16_t index = READ_SHORT();
+//                constant_pool_t *constant = get_constant_exp(frame->class_file, index, CONSTANT_FIELDREF);
+                (void) index;
+                // for now just do nothing
+                break;
+            }
+            case OP_INVOKE_VIRTUAL:  // 0xb6
+            case OP_INVOKE_STATIC: { // 0xb8
                 uint16_t index = READ_SHORT();
                 constant_method_ref_info_t method_ref_info = get_constant_exp(frame->class_file, index,
                                                                               CONSTANT_METHOD_REF)->info.method_ref_info;
@@ -183,13 +214,13 @@ interpret_result_t run(void) {
                 char *method_desc = get_constant_utf8(frame->class_file, name_and_type.descriptor_index);
                 method_t *method = get_class_method(frame->class_file, method_name, method_desc);
                 if (method == NULL) {
-                    native_fn_t *native_fn = get_native_fn(class_name, method_name, method_desc);
-                    if (native_fn == NULL) {
-                        runtime_error("invokestatic cannot  resolve method %s.%s:%s\n", class_name, method_name,
+                    native_fn_info_t *native_fn_info = get_native_fn_info(class_name, method_name, method_desc);
+                    if (native_fn_info == NULL) {
+                        runtime_error("cannot resolve method %s.%s:%s\n", class_name, method_name,
                                       method_desc);
                     }
-                    int num_args = 1;
-                    (*native_fn)(num_args, frame->stack_top - num_args);
+                    call_native(frame, native_fn_info);
+                    break;
                 }
                 // create new frame
                 attribute_t *attribute = get_attribute_by_tag(method->attribute_count, method->attributes, ATTR_CODE);
