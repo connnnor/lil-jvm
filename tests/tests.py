@@ -126,28 +126,64 @@ def test_hello_world(java_type):
         Hello World!
         """)
 
-def test_unary_expr(java_type):
+def test_unary_operator(java_type):
     runDocTest(java_type, "UnaryExpr", """
         >>> public class UnaryExpr {
-        ...     public static void main(String[] args){
-        ...         System.out.println(1 == 2);
-        ...         System.out.println(1 == 1);
+        ...     static void negate(int a) {
+        ...         System.out.println("negate");
+        ...         System.out.println(-a);
+        ...     }
+        ...
+        ...     static void preIncrement(int a) {
+        ...         System.out.println("preIncrement");
+        ...         int b = ++a;
+        ...         System.out.println(b);
+        ...         System.out.println(a);
+        ...     }
+        ...
+        ...     static void postIncrement(int a) {
+        ...         System.out.println("postIncrement");
+        ...         int b = a++;    
+        ...         System.out.println(b);
+        ...         System.out.println(a);
+        ...     }
+        ...
+        ...     public static void main(String[] args) {
+        ...         negate(50);
+        ...         preIncrement(0);
+        ...         postIncrement(0);
         ...     }
         ... }
-        false
-        true
+        negate
+        -50
+        preIncrement
+        1
+        1
+        postIncrement
+        0
+        1
         """)
 
 def test_short_circuit(java_type):
     runDocTest(java_type, "ShortCircuit", """
         >>> public class ShortCircuit {
+        ...
         ...     static boolean sideEffect() {
         ...         System.out.println("sideEffect");
         ...         return true;
         ...     }
+        ...
+        ...     static void shortCircuitOr(boolean a) {
+        ...         System.out.println(a || sideEffect());
+        ...     }
+        ...
+        ...     static void shortCircuitAnd(boolean a) {
+        ...         System.out.println(a && sideEffect());
+        ...     }
+        ...
         ...     public static void main(String[] args){
-        ...         System.out.println(false && sideEffect());
-        ...         System.out.println(true  || sideEffect());
+        ...         shortCircuitAnd(false);
+        ...         shortCircuitOr(true);
         ...     }
         ... }
         false
@@ -156,30 +192,60 @@ def test_short_circuit(java_type):
 
 def test_comparison_operators(java_type):
     runDocTest(java_type, "ComparisonOperators", """
+
         >>> public class ComparisonOperators {
+        ...     static void greaterThan(int a, int b) {
+        ...         System.out.println(a > b);
+        ...     }
+        ... 
+        ...     static void greaterThanOrEqualTo(int a, int b) {
+        ...         System.out.println(a >= b);
+        ...     }
+        ... 
+        ...     static void lessThan(int a, int b) {
+        ...         System.out.println(a < b);
+        ...     }
+        ... 
+        ...     static void lessThanOrEqualTo(int a, int b) {
+        ...         System.out.println(a <= b);
+        ...     }
+        ... 
+        ...     static void equalTo(int a, int b) {
+        ...         System.out.println(a == b);
+        ...     }
+        ... 
+        ...     static void notEqualTo(int a, int b) {
+        ...         System.out.println(a != b);
+        ...     }
+        ... 
         ...     public static void main(String[] args){
         ...         System.out.println("GreaterThan");
-        ...         System.out.println(0 > 1);
-        ...         System.out.println(1 > 1);
-        ...         System.out.println(2 > 1);
+        ...         greaterThan(0, 1);
+        ...         greaterThan(1, 1);
+        ...         greaterThan(2, 1);
+        ... 
         ...         System.out.println("GreaterThanOrEqualTo");
-        ...         System.out.println(0 >= 1);
-        ...         System.out.println(1 >= 1);
-        ...         System.out.println(2 >= 1);
+        ...         greaterThanOrEqualTo(0, 1);
+        ...         greaterThanOrEqualTo(1, 1);
+        ...         greaterThanOrEqualTo(2, 1);
+        ... 
         ...         System.out.println("LessThan");
-        ...         System.out.println(0 < 1);
-        ...         System.out.println(1 < 1);
-        ...         System.out.println(2 < 1);
+        ...         lessThan(0, 1);
+        ...         lessThan(1, 1);
+        ...         lessThan(2, 1);
+        ... 
         ...         System.out.println("LessThanOrEqualTo");
-        ...         System.out.println(0 <= 1);
-        ...         System.out.println(1 <= 1);
-        ...         System.out.println(2 <= 1);
-        ...         System.out.println("Equals");
-        ...         System.out.println(1 == 1);
-        ...         System.out.println(0 == 1);
-        ...         System.out.println("NotEquals");
-        ...         System.out.println(0 != 1);
-        ...         System.out.println(1 != 1);
+        ...         lessThanOrEqualTo(0, 1);
+        ...         lessThanOrEqualTo(1, 1);
+        ...         lessThanOrEqualTo(2, 1);
+        ... 
+        ...         System.out.println("EqualTo");
+        ...         equalTo(1, 1);
+        ...         equalTo(0, 1);
+        ... 
+        ...         System.out.println("NotEqualTo");
+        ...         notEqualTo(1, 1);
+        ...         notEqualTo(0, 1);
         ...     }
         ... }
         GreaterThan
@@ -198,12 +264,12 @@ def test_comparison_operators(java_type):
         true
         true
         false
-        Equals
+        EqualTo
         true
         false 
-        NotEquals
+        NotEqualTo
+        false
         true
-        false 
         """)
 
 @pytest.mark.loop
