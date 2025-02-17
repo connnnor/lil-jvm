@@ -4,8 +4,12 @@
 
 #define NULL ((void *)0)
 
+#ifdef DEBUG
 #define debug_print(fmt, ...) \
-            do { if (DEBUG) fprintf(stderr, fmt, __VA_ARGS__); } while (0)
+            do { fprintf(stderr, fmt, __VA_ARGS__); } while (0)
+#else
+#define debug_print(fmt, ...) do { ; } while (0)
+#endif
 
 void runtime_error(const char * format, ...);
 

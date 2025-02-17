@@ -38,8 +38,7 @@ int main(int argc, char **argv) {
         uint8_t *bytes = read_file(argv[1]);
         read_class_file(bytes, class_file);
         FREE(uint8_t, bytes);
-        interpret(class_file);
-
+        dump_classfile(class_file);
         FREE(class_file_t, class_file);
     } else {
         fprintf(stderr, "Usage: liljvm [path]\n");
