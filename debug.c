@@ -135,11 +135,27 @@ void print_constant_info_at(class_file_t *cf, uint16_t index) {
     }
 }
 
+// instructions that have two byte args
+int two_byte_value_inst(const char *name, uint8_t *code, uint32_t offset) {
+    uint8_t index = code[offset + 1];
+    uint8_t byte = code[offset + 1];
+    printf("%02u: %-20s #%4u, %d\n", offset, name, index, byte);
+    return offset + 3;
+}
+
 // instructions that have one byte index
 int byte_index_inst(class_file_t *cf, const char *name, uint8_t *code, uint32_t offset) {
     uint8_t index = code[offset + 1];
     printf("%02u: %-20s #%4u ", offset, name, index);
     print_constant_info_at(cf, index);
+    printf("\n");
+    return offset + 2;
+}
+
+// instructions that have one byte immediate value
+int byte_immediate_inst(const char *name, uint8_t *code, uint32_t offset) {
+    uint8_t byte = code[offset + 1];
+    printf("%02u: %-20s #%4u ", offset, name, byte);
     printf("\n");
     return offset + 2;
 }
@@ -158,14 +174,32 @@ int disassemble_inst(class_file_t *cf, uint8_t *code, uint32_t offset, int inden
     printf("%*s", indent_level * 2, "");
     printf("(0x%02x) ", opcode);
     switch(opcode) {
-        case OP_ICONST1:
+        case OP_NOP: // 0x00
+            return simple_inst("nop", offset);
+        case OP_ACONST_NULL: // 0x01
+            return simple_inst("aconst_null", offset);
+        case OP_ICONST0: // 0x03
+            return simple_inst("iconst0", offset);
+        case OP_ICONST1: // 0x04
             return simple_inst("iconst1", offset);
         case OP_ICONST2:
             return simple_inst("iconst2", offset);
-        case OP_LDC:
+        case OP_BIPUSH: // 0x10
+            return byte_immediate_inst("bipush", code, offset);
+        case OP_LDC: // 0x12
             return byte_index_inst(cf, "ldc", code, offset);
+        case OP_LLOAD: // 0x16
+            return byte_index_inst(cf, "lload", code, offset);
         case OP_ALOAD_0:
             return simple_inst("aload_0", offset);
+        case OP_ISTORE_0:
+            return simple_inst("istore_0", offset);
+        case OP_ISTORE_1:
+            return simple_inst("istore_1", offset);
+        case OP_ISTORE_2:
+            return simple_inst("istore_2", offset);
+        case OP_ISTORE_3:
+            return simple_inst("istore_3", offset);
         case OP_GET_STATIC:
             return word_index_inst(cf, "getstatic", code, offset);
         case OP_INVOKE_VIRTUAL:
@@ -178,8 +212,12 @@ int disassemble_inst(class_file_t *cf, uint8_t *code, uint32_t offset, int inden
             return simple_inst("iload_0", offset);
         case OP_ILOAD_1:
             return simple_inst("iload_1", offset);
-        case OP_IADD:
+        case OP_IINC: // 0x84
+            return two_byte_value_inst("iinc", code, offset);
+        case OP_IADD: // 0x60
             return simple_inst("iadd", offset);
+        case OP_INEG: // 0x74
+            return simple_inst("ineg", offset);
         case OP_IRETURN:
             return simple_inst("ireturn", offset);
         case OP_RETURN:

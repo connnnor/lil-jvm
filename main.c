@@ -5,10 +5,15 @@
 #include "debug.h"
 #include "vm.h"
 
-static uint8_t *read_file(const char *path) {
-    FILE *f = fopen(path, "rb");
+
+
+static uint8_t *read_file(const char *classname) {
+    char class_file_path[256];
+    int n = strlen(classname);
+    snprintf(class_file_path, n+9, "./%s.class", classname);
+    FILE *f = fopen(class_file_path, "rb");
     if (f == NULL) {
-        fprintf(stderr, "Could not open file \"%s\".\n", path);
+        fprintf(stderr, "Could not open file \"%s\".\n", class_file_path);
         exit(EXIT_FILE_ERROR);
     }
 
@@ -18,12 +23,12 @@ static uint8_t *read_file(const char *path) {
 
     uint8_t *buf = malloc(size + 1);
     if (buf == NULL) {
-        fprintf(stderr, "Not enough memory to read \"%s\".\n", path);
+        fprintf(stderr, "Not enough memory to read \"%s\".\n", class_file_path);
         exit(EXIT_FILE_ERROR);
     }
     size_t bytes_read = fread(buf, sizeof(char), size, f);
     if (bytes_read < size) {
-        fprintf(stderr, "Could not read file \"%s\".\n", path);
+        fprintf(stderr, "Could not read file \"%s\".\n", class_file_path);
         exit(EXIT_FILE_ERROR);
     }
     buf[bytes_read] = '\0';
@@ -42,6 +47,6 @@ int main(int argc, char **argv) {
 
         FREE(class_file_t, class_file);
     } else {
-        fprintf(stderr, "Usage: liljvm [path]\n");
+        fprintf(stderr, "Usage: zhava [class name]\n");
     }
 }

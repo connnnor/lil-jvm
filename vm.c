@@ -46,6 +46,29 @@ void frame_store_local(frame_t *f, value_t v, int i) {
     f->locals[i] = v;
 }
 
+static char *value_type_t_str[] = {
+        [VAL_BOOL] = "boolean",
+        [VAL_INT] = "integer",
+        [VAL_LONG] = "long",
+        [VAL_FLOAT] = "float",
+        [VAL_DOUBLE] = "double",
+        [VAL_REF] = "reference",
+        [VAL_ADDR] = "address",
+};
+
+
+// get local from frame and assert it is correct type
+value_t frame_get_local_expect(frame_t *f, int i, value_type_t expected) {
+    value_t v = f->locals[i];
+    if (expected != v.type) {
+        runtime_error("frame_get_local expected type %s but locals[%d] is type %s",
+                      value_type_t_str[expected],
+                      i,
+                      value_type_t_str[v.type]);
+    }
+    return f->locals[i];
+}
+
 value_t frame_get_local(frame_t *f, int i) {
     return f->locals[i];
 }
@@ -154,10 +177,14 @@ interpret_result_t run(void) {
 #endif
         uint8_t inst;
         switch (inst = READ_BYTE()) {
+            case OP_ICONST0: // 0x03
+                push(frame, INT_VAL(0)); break;
             case OP_ICONST1: // 0x04
                 push(frame, INT_VAL(1)); break;
             case OP_ICONST2: // 0x05
                 push(frame, INT_VAL(2)); break;
+            case OP_BIPUSH: // 0x10
+                push(frame, INT_VAL(READ_BYTE())); break;
             case OP_LDC: { // 0x12
                 uint8_t index = READ_BYTE();
                 constant_pool_t *constant = get_constant(frame->class_file, index);
@@ -172,6 +199,8 @@ interpret_result_t run(void) {
                 }
                 break;
             }
+            case OP_LLOAD: // 0x16
+                push(frame, frame_get_local_expect(frame, READ_BYTE(), VAL_LONG)); break;
             case OP_ILOAD_0: // 0x1a
                 push(frame, frame_get_local(frame, 0)); break;
             case OP_ILOAD_1:
@@ -238,10 +267,15 @@ interpret_result_t run(void) {
                 }
                 break;
             }
-            case OP_IADD: {
+            case OP_IADD: { // 0x60
                 int a = AS_INT(pop(frame));
                 int b = AS_INT(pop(frame));
                 push(frame, INT_VAL(a + b));
+                break;
+            }
+            case OP_INEG: { // 0x74
+                int a = AS_INT(pop(frame));
+                push(frame, INT_VAL(-a));
                 break;
             }
             default:

@@ -30,6 +30,15 @@ value_t println_str_native(frame_t *f, int arg_count, value_t *args) {
     return BOOL_VAL(true);
 }
 
+value_t println_bool_native(frame_t *f, int arg_count, value_t *args) {
+    (void) arg_count;
+    (void) f;
+    printf("%s\n", AS_BOOL(args[0]) ? "true" : "false");
+    // don't actually do anything with this
+    return BOOL_VAL(true);
+}
+
+
 value_t println_int_native(frame_t *f, int arg_count, value_t *args) {
     (void) arg_count;
     (void) f;
@@ -44,6 +53,7 @@ typedef enum native_method_t {
     EXIT,
     PRINTLN_STR,
     PRINTLN_INT,
+    PRINTLN_BOOL,
     NATIVE_METHOD_NONE
 } native_method_t;
 
@@ -60,6 +70,13 @@ native_fn_info_t native_method_map[] = {
                 .method    = "println",
                 .desc      = "(Ljava/lang/String;)V",
                 .native_fn = println_str_native,
+                .arity     = 1
+        },
+        [PRINTLN_BOOL] = {
+                .class     = "java/io/PrintStream",
+                .method    = "println",
+                .desc      = "(Z)V",
+                .native_fn = println_bool_native,
                 .arity     = 1
         },
         [PRINTLN_INT] = {
