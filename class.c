@@ -1,6 +1,8 @@
 #include <stdio.h>
+#include <stdarg.h>
 #include "memory.h"
 #include <string.h>
+#include "debug.h"
 
 #define NULL ((void *)0)
 
@@ -11,7 +13,24 @@
 #define debug_print(fmt, ...) do { ; } while (0)
 #endif
 
+typedef enum parse_result_t {
+    PARSE_OK,
+    PARSE_ERROR
+} parse_result_t;
+
 void runtime_error(const char * format, ...);
+
+void parse_error(class_file_t *cf, const char * format, ...) {
+    va_list args;
+    va_start(args, format);
+    vfprintf(stderr, format, args);
+    va_end(args);
+    fputs("\n", stderr);
+
+    dump_classfile(cf);
+
+    exit(-1);
+}
 
 char * get_constant_utf8(class_file_t *cf, uint16_t index) {
     constant_tag_t tag = cf->constant_pool[index - 1].tag;
@@ -97,14 +116,14 @@ static char *constant_tag_map[] = {
         [CONSTANT_UTF8] = "Utf8",
         [CONSTANT_METHOD_HANDLE] = "MethodHandle",
         [CONSTANT_METHOD_TYPE] = "MethodType",
-        [CONSTANT_UNKNOWN] = "",
+        [CONSTANT_UNKNOWN] = "*Unknown*",
 };
 
 char *get_constant_tag_name(constant_tag_t tag) {
     return constant_tag_map[tag];
 }
 
-void read_constant_pool(uint16_t count, constant_pool_t **constant_pool) {
+void read_constant_pool(class_file_t *cf, uint16_t count, constant_pool_t **constant_pool) {
     constant_pool_t *cp = ALLOCATE(constant_pool_t, count);
     // constant pool count is number of entries PLUS ONE
     for (uint16_t i = 0; i < count - 1; i++) {
@@ -135,8 +154,7 @@ void read_constant_pool(uint16_t count, constant_pool_t **constant_pool) {
                 current += cp[i].info.utf8_info.length;
                 break;
             default:
-                printf("Error: Unknown tag 0x%02d for constant pool entry %d (%s)", tag, i + 1, get_constant_tag_name(tag));
-                exit(-1);
+                parse_error(cf, "Error: Unknown tag 0x%02d for constant pool entry %d (%s)", tag, i + 1, get_constant_tag_name(tag));
         }
     }
     *constant_pool = cp;
@@ -154,7 +172,7 @@ static char *attribute_tag_map[] = {
         [ATTR_NEST_MEMBERS] = "NestMembers",
         [ATTR_SOURCE_FILE] = "SourceFile",
         [ATTR_LINE_NUM_TABLE] = "LineNumberTable",
-        [ATTR_UNKNOWN] = NULL
+        [ATTR_UNKNOWN] = "*Unknown*"
 };
 
 char *get_attribute_name(attribute_tag_t tag) {
@@ -195,6 +213,17 @@ constant_pool_t *get_constant_exp(class_file_t *cf, uint16_t index, constant_tag
                       get_constant_tag_name(actual));
     }
     return &cf->constant_pool[index - 1];
+}
+
+// parsing this sounds really annoying so im skipping it for now
+attr_stack_map_table_t *read_attribute_stack_map_table(class_file_t *cf, uint32_t size) {
+    (void) cf;
+    attr_stack_map_table_t *a = ALLOCATE(attr_stack_map_table_t, 1);
+    read_bytes(&a->number_of_entries, 2);
+    a->entries = ALLOCATE(uint8_t, size - 2);
+    memcpy(a->entries, current, size - 2);
+    current += size - 2;
+    return a;
 }
 
 attr_code_t *read_attribute_code(class_file_t *cf) {
@@ -259,10 +288,12 @@ void read_attributes(class_file_t *cf, uint16_t count, attribute_t **attributes)
             case ATTR_SOURCE_FILE:
                 a[i].info.attr_source_file = read_attribute_source_file();
                 break;
+            case ATTR_STACK_MAP_TABLE:
+                a[i].info.attr_stack_map_table = read_attribute_stack_map_table(cf, a[i].attribute_length);
+                break;
             case ATTR_UNKNOWN:
             default:
-                printf("Error: Unknown tag 0x%02d for attribute with name %s\n", a->tag, name);
-                exit(-1);
+                parse_error(cf, "Error: Unknown attribute tag 0x%02d for constant pool entry %d (%s)", a->tag, i + 1, get_attribute_name(a->tag));
         }
        // copy info byte array
        // a[i].in
@@ -329,7 +360,7 @@ void read_class_file(uint8_t *bytes, class_file_t *class_file) {
     read_bytes(&class_file->minor_version, 2);
     read_bytes(&class_file->major_version, 2);
     read_bytes(&class_file->constant_pool_count, 2);
-    read_constant_pool(class_file->constant_pool_count, &class_file->constant_pool);
+    read_constant_pool(class_file, class_file->constant_pool_count, &class_file->constant_pool);
     read_bytes(&class_file->access_flags, 2);
     read_bytes(&class_file->this_class, 2);
     read_bytes(&class_file->super_class, 2);

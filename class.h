@@ -209,6 +209,11 @@ typedef struct attr_source_file_t {
     uint16_t sourcefile_index;
 } attr_source_file_t;
 
+typedef struct attr_stack_map_table_t {
+    uint16_t number_of_entries;
+    uint8_t *entries;
+} attr_stack_map_table_t;
+
 typedef struct line_number_table_t {
     uint16_t start_pc;
     uint16_t line_number;
@@ -230,6 +235,7 @@ typedef struct attribute_t {
         attr_code_t *attr_code;
         attr_source_file_t *attr_source_file;
         attr_line_number_table_t *attr_line_number_table;
+        attr_stack_map_table_t *attr_stack_map_table;
     } info;
 } attribute_t;
 
