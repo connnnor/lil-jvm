@@ -38,8 +38,8 @@ void dump_constant_pool(class_file_t *cf, uint16_t count, constant_pool_t *cp) {
                 printf("// ");
                 break;
             default:
+                printf("Unknown tag 0x%02d", cp[i].tag);
                 break;
-//                printf("Unknown tag 0x%02d", cp[i].tag);
         }
         print_constant_info_at(cf, i + 1);
         printf("\n");
@@ -166,6 +166,15 @@ int byte_immediate_inst(const char *name, uint8_t *code, uint32_t offset) {
     return offset + 2;
 }
 
+// instructions that have two byte immediate value
+int branch_offset_inst(const char *name, uint8_t *code, uint32_t offset) {
+    //uint16_t word = (code[offset + 1] << 8) | (code[offset + 2]);
+    int16_t word = (code[offset + 1] << 8) | (code[offset + 2]);
+    printf("%02u: %-20s %4d ", offset, name, offset + word);
+    printf("\n");
+    return offset + 3;
+}
+
 // instructions that have two byte index
 int word_index_inst(class_file_t *cf, const char *name, uint8_t *code, uint32_t offset) {
     uint16_t index = (code[offset + 1] << 8) | (code[offset + 2]);
@@ -174,6 +183,7 @@ int word_index_inst(class_file_t *cf, const char *name, uint8_t *code, uint32_t 
     printf("\n");
     return offset + 3;
 }
+
 
 int disassemble_inst(class_file_t *cf, uint8_t *code, uint32_t offset, int indent_level) {
     uint8_t opcode = code[offset];
@@ -224,6 +234,20 @@ int disassemble_inst(class_file_t *cf, uint8_t *code, uint32_t offset, int inden
             return simple_inst("iadd", offset);
         case OP_INEG: // 0x74
             return simple_inst("ineg", offset);
+        case OP_IF_ICMPEQ: // 0x9f
+            return branch_offset_inst("if_icmpeq", code, offset);
+        case OP_IF_ICMPNE: // 0xa0
+            return branch_offset_inst("if_icmpne", code, offset);
+        case OP_IF_ICMPLT: // 0xa1
+            return branch_offset_inst("if_icmplt", code, offset);
+        case OP_IF_ICMPGE: // 0xa2
+            return branch_offset_inst("if_icmpge", code, offset);
+        case OP_IF_ICMPGT: // 0xa3
+            return branch_offset_inst("if_icmpgt", code, offset);
+        case OP_IF_ICMPLE: // 0xa4
+            return branch_offset_inst("if_icmple", code, offset);
+        case OP_GOTO: // 0xa7
+            return branch_offset_inst("goto", code, offset);
         case OP_IRETURN:
             return simple_inst("ireturn", offset);
         case OP_RETURN:
@@ -254,6 +278,7 @@ void dump_attr_code(class_file_t *cf, attribute_t *attr, int indent_level) {
         printf("%*s%-20s = 0x%04x\n", (indent_level + 1) * 2, "", "Handler PC",  code_attr->exception_table[i].handler_pc);
         printf("%*s%-20s = 0x%04x\n", (indent_level + 1) * 2, "", "Catch Type",  code_attr->exception_table[i].catch_type);
     }
+    dump_attributes(cf, code_attr->attributes_count, code_attr->attributes, indent_level + 1);
 }
 
 void dump_attr_source_file(class_file_t *cf, attribute_t *attr, int indent_level) {

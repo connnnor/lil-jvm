@@ -98,6 +98,10 @@ value_t pop(frame_t *f) {
     return *(f->stack_top);
 }
 
+value_t peek(frame_t *f, int distance) {
+    return f->stack_top[-1 - distance];
+}
+
 //value_t pop_word(void) {
 //    vm.stack_top--;
 //    return *vm.stack_top;
@@ -153,6 +157,20 @@ interpret_result_t run(void) {
 #define READ_SHORT() \
    (frame->pc += 2, \
    (uint16_t) ((frame->code[frame->pc - 2] << 8) | frame->code[frame->pc - 1]))
+#define IF_CMP(AS_VAL_TYPE, IS_VAL_TYPE, type, op)                      \
+  do {                                                                  \
+    if (!IS_VAL_TYPE(peek(frame, 0)) || !IS_VAL_TYPE(peek(frame, 1))) { \
+      runtime_error("Operands must be VAL_TYPE.");                      \
+      return INTERPRET_RUNTIME_ERROR;                                   \
+    }                                                                   \
+    type b = AS_VAL_TYPE(pop(frame));                                   \
+    type a = AS_VAL_TYPE(pop(frame));                                   \
+    bool succeeds = a op b;                                          \
+    if (succeeds) {                                                     \
+        uint16_t offset = READ_SHORT();                                 \
+        frame->pc += offset;                                            \
+    }                                                                   \
+  } while (false)
 
     for (;;) {
         frame = vm.frames[vm.frame_count - 1];
@@ -278,6 +296,18 @@ interpret_result_t run(void) {
                 push(frame, INT_VAL(-a));
                 break;
             }
+            case OP_IF_ICMPEQ: // 0x9f
+                IF_CMP(AS_INT, IS_INT, int, ==); break;
+            case OP_IF_ICMPNE: // 0xa0
+                IF_CMP(AS_INT, IS_INT, int, !=); break;
+            case OP_IF_ICMPLT: // 0xa1
+                IF_CMP(AS_INT, IS_INT, int, <);  break;
+            case OP_IF_ICMPGE: // 0xa2
+                IF_CMP(AS_INT, IS_INT, int, >=); break;
+            case OP_IF_ICMPGT: // 0xa3
+                IF_CMP(AS_INT, IS_INT, int, >);  break;
+            case OP_IF_ICMPLE: // 0xa4
+                IF_CMP(AS_INT, IS_INT, int, <=); break;
             default:
                 printf("Unknown opcode %d (0x%02x)\n", inst, inst);
                 return INTERPRET_RUNTIME_ERROR;
