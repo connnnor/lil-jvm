@@ -23,3 +23,9 @@ add_executable(javap javap.c
         native.c
         native.h
         javap.c)
+
+target_compile_definitions(java
+        PRIVATE
+        # If the debug configuration pass the DEBUG define to the compiler
+        $<$<CONFIG:Debug>:DEBUG>
+)
