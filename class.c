@@ -32,15 +32,19 @@ void parse_error(class_file_t *cf, const char * format, ...) {
 
 char * get_constant_utf8(class_file_t *cf, uint16_t index) {
     constant_tag_t tag = cf->constant_pool[index - 1].tag;
-    assert(tag == CONSTANT_UTF8 && "Constant is not Utf8");
+    if (tag != CONSTANT_UTF8) {
+        runtime_error("Constant %d is not expected type Utf8", index);
+    }
     return cf->constant_pool[index - 1].info.utf8_info.bytes;
 }
 
 // get class name for constant class info at index
 char * get_classname(class_file_t *cf, uint16_t index) {
     constant_tag_t tag = cf->constant_pool[index - 1].tag;
+    if (tag != CONSTANT_CLASS) {
+        runtime_error("Constant %d is not expected type Class", index);
+    }
     constant_class_info_t class_info = cf->constant_pool[index - 1].info.class_info;
-    assert(tag == CONSTANT_CLASS && "Constant is not Class");
     uint16_t name_index = class_info.name_index;
     return get_constant_utf8(cf, name_index);
 }
