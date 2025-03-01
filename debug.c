@@ -69,8 +69,8 @@ void dump_attribute_common(class_file_t *cf, attribute_t *a, int indent_level) {
     printf("%*s%-20s = 0x%04x\n", indent_level * 2, "", "Length (Bytes)", a->attribute_length);
 }
 
-int simple_inst(const char *name, uint32_t offset) {
-    printf("%02u: %s\n", offset, name);
+int simple_inst(opcode_t opcode, uint32_t offset) {
+    printf("%02u: %s\n", offset, get_opcode_name(opcode));
     return offset + 1;
 }
 
@@ -141,44 +141,48 @@ void print_constant_info_at(class_file_t *cf, uint16_t index) {
     }
 }
 
+char *get_opcode_name(opcode_t opcode) {
+    return opcode_name_map[opcode];
+}
+
 // instructions that have two byte args
-int two_byte_value_inst(const char *name, uint8_t *code, uint32_t offset) {
+int two_byte_value_inst(opcode_t opcode, uint8_t *code, uint32_t offset) {
     uint8_t index = code[offset + 1];
     uint8_t byte = code[offset + 1];
-    printf("%02u: %-20s #%4u, %d\n", offset, name, index, byte);
+    printf("%02u: %-20s #%4u, %d\n", offset, get_opcode_name(opcode), index, byte);
     return offset + 3;
 }
 
 // instructions that have one byte index
-int byte_index_inst(class_file_t *cf, const char *name, uint8_t *code, uint32_t offset) {
+int byte_index_inst(class_file_t *cf, opcode_t opcode, uint8_t *code, uint32_t offset) {
     uint8_t index = code[offset + 1];
-    printf("%02u: %-20s #%4u ", offset, name, index);
+    printf("%02u: %-20s #%4u ", offset, get_opcode_name(opcode), index);
     print_constant_info_at(cf, index);
     printf("\n");
     return offset + 2;
 }
 
 // instructions that have one byte immediate value
-int byte_immediate_inst(const char *name, uint8_t *code, uint32_t offset) {
+int byte_immediate_inst(opcode_t opcode, uint8_t *code, uint32_t offset) {
     uint8_t byte = code[offset + 1];
-    printf("%02u: %-20s #%4u ", offset, name, byte);
+    printf("%02u: %-20s #%4u ", offset, get_opcode_name(opcode), byte);
     printf("\n");
     return offset + 2;
 }
 
 // instructions that have two byte immediate value
-int branch_offset_inst(const char *name, uint8_t *code, uint32_t offset) {
+int branch_offset_inst(opcode_t opcode, uint8_t *code, uint32_t offset) {
     //uint16_t word = (code[offset + 1] << 8) | (code[offset + 2]);
     int16_t word = (code[offset + 1] << 8) | (code[offset + 2]);
-    printf("%02u: %-20s %4d ", offset, name, offset + word);
+    printf("%02u: %-20s %4d ", offset, get_opcode_name(opcode), offset + word);
     printf("\n");
     return offset + 3;
 }
 
 // instructions that have two byte index
-int word_index_inst(class_file_t *cf, const char *name, uint8_t *code, uint32_t offset) {
+int word_index_inst(class_file_t *cf, opcode_t opcode, uint8_t *code, uint32_t offset) {
     uint16_t index = (code[offset + 1] << 8) | (code[offset + 2]);
-    printf("%02u: %-20s #%4u ", offset, name, index);
+    printf("%02u: %-20s #%4u ", offset, get_opcode_name(opcode), index);
     print_constant_info_at(cf, index);
     printf("\n");
     return offset + 3;
@@ -191,69 +195,69 @@ int disassemble_inst(class_file_t *cf, uint8_t *code, uint32_t offset, int inden
     printf("(0x%02x) ", opcode);
     switch(opcode) {
         case OP_NOP: // 0x00
-            return simple_inst("nop", offset);
+            return simple_inst(opcode, offset);
         case OP_ACONST_NULL: // 0x01
-            return simple_inst("aconst_null", offset);
-        case OP_ICONST0: // 0x03
-            return simple_inst("iconst0", offset);
-        case OP_ICONST1: // 0x04
-            return simple_inst("iconst1", offset);
-        case OP_ICONST2:
-            return simple_inst("iconst2", offset);
+            return simple_inst(opcode, offset);
+        case OP_ICONST_0: // 0x03
+            return simple_inst(opcode, offset);
+        case OP_ICONST_1: // 0x04
+            return simple_inst(opcode, offset);
+        case OP_ICONST_2:
+            return simple_inst(opcode, offset);
         case OP_BIPUSH: // 0x10
-            return byte_immediate_inst("bipush", code, offset);
+            return byte_immediate_inst(opcode, code, offset);
         case OP_LDC: // 0x12
-            return byte_index_inst(cf, "ldc", code, offset);
+            return byte_index_inst(cf, opcode, code, offset);
         case OP_LLOAD: // 0x16
-            return byte_index_inst(cf, "lload", code, offset);
+            return byte_index_inst(cf, opcode, code, offset);
         case OP_ALOAD_0:
-            return simple_inst("aload_0", offset);
+            return simple_inst(opcode, offset);
         case OP_ISTORE_0:
-            return simple_inst("istore_0", offset);
+            return simple_inst(opcode, offset);
         case OP_ISTORE_1:
-            return simple_inst("istore_1", offset);
+            return simple_inst(opcode, offset);
         case OP_ISTORE_2:
-            return simple_inst("istore_2", offset);
+            return simple_inst(opcode, offset);
         case OP_ISTORE_3:
-            return simple_inst("istore_3", offset);
-        case OP_GET_STATIC:
-            return word_index_inst(cf, "getstatic", code, offset);
-        case OP_INVOKE_VIRTUAL:
-            return word_index_inst(cf, "invokevirtual", code, offset);
-        case OP_INVOKE_SPECIAL:
-            return word_index_inst(cf, "invokespecial", code, offset);
-        case OP_INVOKE_STATIC:
-            return word_index_inst(cf, "invokestatic", code, offset);
+            return simple_inst(opcode, offset);
+        case OP_GETSTATIC:
+            return word_index_inst(cf, opcode, code, offset);
+        case OP_INVOKEVIRTUAL:
+            return word_index_inst(cf, opcode, code, offset);
+        case OP_INVOKESPECIAL:
+            return word_index_inst(cf, opcode, code, offset);
+        case OP_INVOKESTATIC:
+            return word_index_inst(cf, opcode, code, offset);
         case OP_ILOAD_0:
-            return simple_inst("iload_0", offset);
+            return simple_inst(opcode, offset);
         case OP_ILOAD_1:
-            return simple_inst("iload_1", offset);
+            return simple_inst(opcode, offset);
         case OP_IINC: // 0x84
-            return two_byte_value_inst("iinc", code, offset);
+            return two_byte_value_inst(opcode, code, offset);
         case OP_IADD: // 0x60
-            return simple_inst("iadd", offset);
+            return simple_inst(opcode, offset);
         case OP_INEG: // 0x74
-            return simple_inst("ineg", offset);
+            return simple_inst(opcode, offset);
         case OP_IF_ICMPEQ: // 0x9f
-            return branch_offset_inst("if_icmpeq", code, offset);
+            return branch_offset_inst(opcode, code, offset);
         case OP_IF_ICMPNE: // 0xa0
-            return branch_offset_inst("if_icmpne", code, offset);
+            return branch_offset_inst(opcode, code, offset);
         case OP_IF_ICMPLT: // 0xa1
-            return branch_offset_inst("if_icmplt", code, offset);
+            return branch_offset_inst(opcode, code, offset);
         case OP_IF_ICMPGE: // 0xa2
-            return branch_offset_inst("if_icmpge", code, offset);
+            return branch_offset_inst(opcode, code, offset);
         case OP_IF_ICMPGT: // 0xa3
-            return branch_offset_inst("if_icmpgt", code, offset);
+            return branch_offset_inst(opcode, code, offset);
         case OP_IF_ICMPLE: // 0xa4
-            return branch_offset_inst("if_icmple", code, offset);
+            return branch_offset_inst(opcode, code, offset);
         case OP_GOTO: // 0xa7
-            return branch_offset_inst("goto", code, offset);
+            return branch_offset_inst(opcode, code, offset);
         case OP_IRETURN:
-            return simple_inst("ireturn", offset);
+            return simple_inst(opcode, offset);
         case OP_RETURN:
-            return simple_inst("return", offset);
+            return simple_inst(opcode, offset);
         default:
-            printf("Unknown opcode %d\n", opcode);
+            printf("Unknown opcode %s (0x%02x)\n", get_opcode_name(opcode), opcode);
             return offset + 1;
     }
 }
@@ -292,14 +296,15 @@ void dump_attr_source_file(class_file_t *cf, attribute_t *attr, int indent_level
            get_constant_utf8(cf, source_attr->sourcefile_index));
 }
 
-void dump_attr_line_num_table(class_file_t *cf, attribute_t *attr, int indent_level) {
+void dump_attr_line_num_table(attribute_t *attr, int indent_level) {
     printf("%*sLine Number Table :\n", indent_level * 2, "");
-    dump_attribute_common(cf, attr, indent_level + 1);
+    //dump_attribute_common(cf, attr, indent_level + 1);
     attr_line_number_table_t *a = attr->info.attr_line_number_table;
-    printf("%*s%-20s = 0x%04x\n", (indent_level + 1) * 2, "", "Line Number Table Length", a->line_number_table_length);
+    //printf("%*s%-20s = 0x%04x\n", (indent_level + 1) * 2, "", "Line Number Table Length", a->line_number_table_length);
     for (uint16_t i = 0; i < a->line_number_table_length; i++) {
-        printf("%*s%-20s = 0x%04x\n", (indent_level + 1) * 2, "", "Start PC", a->line_number_table[i].start_pc);
-        printf("%*s%-20s = %u\n", (indent_level + 1) * 2, "",     "Line Number", a->line_number_table[i].line_number);
+        printf("%*s%s %d: %u\n", (indent_level + 1) * 2, "",     "Line",
+               a->line_number_table[i].line_number,
+               a->line_number_table[i].start_pc);
     }
 }
 
@@ -311,7 +316,7 @@ void dump_attributes(class_file_t *class_file, uint16_t count, attribute_t *attr
                 dump_attr_code(class_file, &attributes[i], indent_level + 1);
                 break;
             case ATTR_LINE_NUM_TABLE:
-                dump_attr_line_num_table(class_file, &attributes[i], indent_level + 1);
+                dump_attr_line_num_table(&attributes[i], indent_level + 1);
                 break;
             case ATTR_SOURCE_FILE:
                 dump_attr_source_file(class_file, &attributes[i], indent_level + 1);

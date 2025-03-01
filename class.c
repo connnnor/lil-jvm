@@ -4,8 +4,6 @@
 #include <string.h>
 #include "debug.h"
 
-#define NULL ((void *)0)
-
 #ifdef DEBUG
 #define debug_print(fmt, ...) \
             do { fprintf(stderr, fmt, __VA_ARGS__); } while (0)

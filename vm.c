@@ -78,10 +78,10 @@ void print_value(frame_t *f, value_t value) {
         case VAL_BOOL:
             printf(AS_BOOL(value) ? "true" : "false");
             break;
-        case VAL_INT:    printf("%d",  AS_INT(value)); break;
-        case VAL_LONG:   printf("%ld", AS_LONG(value)); break;
-        case VAL_FLOAT:  printf("%f",  AS_FLOAT(value)); break;
-        case VAL_DOUBLE: printf("%f",  AS_DOUBLE(value)); break;
+        case VAL_INT:    printf("%d",   AS_INT(value)); break;
+        case VAL_LONG:   printf("%lld", AS_LONG(value)); break;
+        case VAL_FLOAT:  printf("%f",   AS_FLOAT(value)); break;
+        case VAL_DOUBLE: printf("%f",   AS_DOUBLE(value)); break;
         case VAL_ADDR: printf("TODO VAL_ADDR: print_value"); break;
         case VAL_REF:
             print_constant_info(f->class_file, value.as.reference);
@@ -195,11 +195,11 @@ interpret_result_t run(void) {
 #endif
         uint8_t inst;
         switch (inst = READ_BYTE()) {
-            case OP_ICONST0: // 0x03
+            case OP_ICONST_0: // 0x03
                 push(frame, INT_VAL(0)); break;
-            case OP_ICONST1: // 0x04
+            case OP_ICONST_1: // 0x04
                 push(frame, INT_VAL(1)); break;
-            case OP_ICONST2: // 0x05
+            case OP_ICONST_2: // 0x05
                 push(frame, INT_VAL(2)); break;
             case OP_BIPUSH: // 0x10
                 push(frame, INT_VAL(READ_BYTE())); break;
@@ -239,15 +239,15 @@ interpret_result_t run(void) {
                 pop_frame(frame);
                 break;
             }
-            case OP_GET_STATIC: { // 0xb2
+            case OP_GETSTATIC: { // 0xb2
                 uint16_t index = READ_SHORT();
 //                constant_pool_t *constant = get_constant_exp(frame->class_file, index, CONSTANT_FIELDREF);
                 (void) index;
                 // for now just do nothing
                 break;
             }
-            case OP_INVOKE_VIRTUAL:  // 0xb6
-            case OP_INVOKE_STATIC: { // 0xb8
+            case OP_INVOKEVIRTUAL:  // 0xb6
+            case OP_INVOKESTATIC: { // 0xb8
                 uint16_t index = READ_SHORT();
                 constant_method_ref_info_t method_ref_info = get_constant_exp(frame->class_file, index,
                                                                               CONSTANT_METHOD_REF)->info.method_ref_info;
@@ -309,7 +309,7 @@ interpret_result_t run(void) {
             case OP_IF_ICMPLE: // 0xa4
                 IF_CMP(AS_INT, IS_INT, int, <=); break;
             default:
-                printf("Unknown opcode %d (0x%02x)\n", inst, inst);
+                printf("Unimplemented opcode %s (0x%02x)\n", get_opcode_name(inst), inst);
                 return INTERPRET_RUNTIME_ERROR;
         }
     }

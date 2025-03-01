@@ -1,4 +1,3 @@
-# TODO
 # TODO use link below to write custom explanations for failures
 # https://docs.pytest.org/en/7.1.x/how-to/assert.html
 
@@ -18,9 +17,11 @@ JAVA_TYPE = 'java'
 
 
 BINS = {
-    ZHAVA_TYPE : '/home/kang/workspace/lil-jvm/cmake-build-debug/java',
+#   ZHAVA_TYPE : '/home/kang/workspace/lil-jvm/cmake-build-debug/java',
+    ZHAVA_TYPE : '/Users/connorkelleher/workspace-local/lil-jvm/cmake-build-debug/java',
     JAVA_TYPE  : '/usr/bin/java',
 }
+
 
 @pytest.fixture(params=[ZHAVA_TYPE, JAVA_TYPE])
 def java_type(request):

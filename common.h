@@ -8,7 +8,7 @@
 #include <assert.h>
 #include <stdio.h>
 
-//#define DEBUG 0
+#define DEBUG 1
 
 #ifdef DEBUG
 #define DEBUG_TRACE_EXECUTION
