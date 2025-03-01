@@ -79,7 +79,7 @@ void print_value(frame_t *f, value_t value) {
             printf(AS_BOOL(value) ? "true" : "false");
             break;
         case VAL_INT:    printf("%d",   AS_INT(value)); break;
-        case VAL_LONG:   printf("%lld", AS_LONG(value)); break;
+        case VAL_LONG:   printf("%lld", (long long) AS_LONG(value)); break;
         case VAL_FLOAT:  printf("%f",   AS_FLOAT(value)); break;
         case VAL_DOUBLE: printf("%f",   AS_DOUBLE(value)); break;
         case VAL_ADDR: printf("TODO VAL_ADDR: print_value"); break;
