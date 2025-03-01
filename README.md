@@ -183,13 +183,13 @@ Attributes : 1
 
 ## Running Tests
 
-Each test specifies a piece of java source code and the expected output on stdout, then compiles it with `javac`, then executes the class file using the actual JVM (`/usr/bin/java`) and this projects jvm.
+Each test specifies a piece of java source code and the expected output on stdout, then compiles it with `javac`, then executes the class file using the actual JVM (`/usr/bin/java`) and this project's jvm.
 
 To execute tests first setup a venv and install pytest, then you can run them like:
 
 ```sh
 > cd tests
->  pytest tests.py
+> pytest tests.py
 ```
 
 Here is a test for conditional and branching instructions. The lines starting with `>>>` or `...` are compiled into a java class file,
