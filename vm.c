@@ -157,20 +157,29 @@ interpret_result_t run(void) {
 #define READ_SHORT() \
    (frame->pc += 2, \
    (uint16_t) ((frame->code[frame->pc - 2] << 8) | frame->code[frame->pc - 1]))
-#define IF_CMP(AS_VAL_TYPE, IS_VAL_TYPE, type, op)                      \
+#define COMPARE(a, b, op)                     \
   do {                                                                  \
-    if (!IS_VAL_TYPE(peek(frame, 0)) || !IS_VAL_TYPE(peek(frame, 1))) { \
+    bool succeeds = a op b;                                             \
+    uint16_t offset = READ_SHORT();                                     \
+    if (succeeds) {                                                     \
+        frame->pc += offset - 3;                                        \
+    }                                                                   \
+  } while (false)
+
+#define IF_CMP_LITERAL(AS_VAL_TYPE, IS_VAL_TYPE, type, op, literal)     \
+  do {                                                                  \
+    if (!IS_VAL_TYPE(peek(frame, 0))) {                                 \
       runtime_error("Operands must be VAL_TYPE.");                      \
       return INTERPRET_RUNTIME_ERROR;                                   \
     }                                                                   \
-    type b = AS_VAL_TYPE(pop(frame));                                   \
     type a = AS_VAL_TYPE(pop(frame));                                   \
-    bool succeeds = a op b;                                          \
+    bool succeeds = a op literal;                                       \
     if (succeeds) {                                                     \
         uint16_t offset = READ_SHORT();                                 \
         frame->pc += offset;                                            \
     }                                                                   \
   } while (false)
+
 
     for (;;) {
         frame = vm.frames[vm.frame_count - 1];
@@ -296,18 +305,30 @@ interpret_result_t run(void) {
                 push(frame, INT_VAL(-a));
                 break;
             }
+            case OP_IFEQ: // 0x99
+                COMPARE(AS_INT(pop(frame)), 0, ==); break;
+            case OP_IFNE: // 0x9a
+                COMPARE(AS_INT(pop(frame)), 0, !=); break;
+            case OP_IFLT: // 0x9b
+                COMPARE(AS_INT(pop(frame)), 0, <); break;
+            case OP_IFGE: // 0x9c
+                COMPARE(AS_INT(pop(frame)), 0, >=); break;
+            case OP_IFGT: // 0x9d
+                COMPARE(AS_INT(pop(frame)), 0, >); break;
+            case OP_IFLE: // 0x9e
+                COMPARE(AS_INT(pop(frame)), 0, <=); break;
             case OP_IF_ICMPEQ: // 0x9f
-                IF_CMP(AS_INT, IS_INT, int, ==); break;
+                COMPARE(AS_INT(pop(frame)), AS_INT(pop(frame)), ==); break;
             case OP_IF_ICMPNE: // 0xa0
-                IF_CMP(AS_INT, IS_INT, int, !=); break;
+                COMPARE(AS_INT(pop(frame)), AS_INT(pop(frame)), !=); break;
             case OP_IF_ICMPLT: // 0xa1
-                IF_CMP(AS_INT, IS_INT, int, <);  break;
+                COMPARE(AS_INT(pop(frame)), AS_INT(pop(frame)), <); break;
             case OP_IF_ICMPGE: // 0xa2
-                IF_CMP(AS_INT, IS_INT, int, >=); break;
+                COMPARE(AS_INT(pop(frame)), AS_INT(pop(frame)), >=); break;
             case OP_IF_ICMPGT: // 0xa3
-                IF_CMP(AS_INT, IS_INT, int, >);  break;
+                COMPARE(AS_INT(pop(frame)), AS_INT(pop(frame)), >); break;
             case OP_IF_ICMPLE: // 0xa4
-                IF_CMP(AS_INT, IS_INT, int, <=); break;
+                COMPARE(AS_INT(pop(frame)), AS_INT(pop(frame)), <=); break;
             default:
                 printf("Unimplemented opcode %s (0x%02x)\n", get_opcode_name(inst), inst);
                 return INTERPRET_RUNTIME_ERROR;

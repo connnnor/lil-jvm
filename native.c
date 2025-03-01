@@ -19,40 +19,59 @@ value_t exit_native(frame_t *f, int arg_count, value_t *args) {
     exit(code);
 }
 
+
+#define PRINT(format, value) \
+    do {                                 \
+        (void) arg_count;                \
+        (void) f;                        \
+        printf(format, value);           \
+  } while (false)
+
 value_t println_str_native(frame_t *f, int arg_count, value_t *args) {
-    (void) arg_count;
     value_t value = args[0];
     if (IS_REFERENCE(value)) {
         char *str = get_constant_utf8(f->class_file, AS_REFERENCE(value)->info.string_info.string_index);
-        printf("%s\n", str);
+        PRINT("%s\n", str);
     }
     // don't actually do anything with this
     return BOOL_VAL(true);
 }
 
-value_t println_bool_native(frame_t *f, int arg_count, value_t *args) {
-    (void) arg_count;
-    (void) f;
-    printf("%s\n", AS_BOOL(args[0]) ? "true" : "false");
+value_t print_str_native(frame_t *f, int arg_count, value_t *args) {
+    value_t value = args[0];
+    if (IS_REFERENCE(value)) {
+        char *str = get_constant_utf8(f->class_file, AS_REFERENCE(value)->info.string_info.string_index);
+        PRINT("%s", str);
+    } else {
+        runtime_error("expected reference");
+    }
     // don't actually do anything with this
+    return BOOL_VAL(true);
+}
+
+
+value_t println_bool_native(frame_t *f, int arg_count, value_t *args) {
+    PRINT("%s\n", AS_BOOL(args[0]) ? "true" : "false");
     return BOOL_VAL(true);
 }
 
 
 value_t println_int_native(frame_t *f, int arg_count, value_t *args) {
-    (void) arg_count;
-    (void) f;
-    printf("%d\n", AS_INT(args[0]));
-    // don't actually do anything with this
+    PRINT("%d\n", AS_INT(args[0]));
     return BOOL_VAL(true);
 }
 
-
+value_t print_int_native(frame_t *f, int arg_count, value_t *args) {
+    PRINT("%d", AS_INT(args[0]));
+    return BOOL_VAL(true);
+}
 
 typedef enum native_method_t {
     EXIT,
+    PRINT_STR,
     PRINTLN_STR,
     PRINTLN_INT,
+    PRINT_INT,
     PRINTLN_BOOL,
     NATIVE_METHOD_NONE
 } native_method_t;
@@ -64,6 +83,13 @@ native_fn_info_t native_method_map[] = {
             .desc      = "(I)V",
             .native_fn = exit_native,
             .arity     = 1
+        },
+        [PRINT_STR] = {
+                .class     = "java/io/PrintStream",
+                .method    = "print",
+                .desc      = "(Ljava/lang/String;)V",
+                .native_fn = print_str_native,
+                .arity     = 1
         },
         [PRINTLN_STR] = {
                 .class     = "java/io/PrintStream",
@@ -84,6 +110,13 @@ native_fn_info_t native_method_map[] = {
             .method    = "println",
             .desc      = "(I)V",
             .native_fn = println_int_native,
+            .arity     = 1
+        },
+        [PRINT_INT] = {
+            .class     = "java/io/PrintStream",
+            .method    = "print",
+            .desc      = "(I)V",
+            .native_fn = print_int_native,
             .arity     = 1
         }
 };

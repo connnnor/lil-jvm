@@ -446,18 +446,18 @@ int disassemble_inst(class_file_t *cf, uint8_t *code, uint32_t offset, int inden
             return simple_inst(opcode, offset);
         case OP_INEG: // 0x74
             return simple_inst(opcode, offset);
+        case OP_IFEQ: // 0x99
+        case OP_IFNE: // 0x9a
+        case OP_IFLT: // 0x9b
+        case OP_IFGE: // 0x9c
+        case OP_IFGT: // 0x9d
+        case OP_IFLE: // 0x9e
         case OP_IF_ICMPEQ: // 0x9f
-            return branch_offset_inst(opcode, code, offset);
         case OP_IF_ICMPNE: // 0xa0
-            return branch_offset_inst(opcode, code, offset);
         case OP_IF_ICMPLT: // 0xa1
-            return branch_offset_inst(opcode, code, offset);
         case OP_IF_ICMPGE: // 0xa2
-            return branch_offset_inst(opcode, code, offset);
         case OP_IF_ICMPGT: // 0xa3
-            return branch_offset_inst(opcode, code, offset);
         case OP_IF_ICMPLE: // 0xa4
-            return branch_offset_inst(opcode, code, offset);
         case OP_GOTO: // 0xa7
             return branch_offset_inst(opcode, code, offset);
         case OP_IRETURN:

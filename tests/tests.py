@@ -17,8 +17,8 @@ JAVA_TYPE = 'java'
 
 
 BINS = {
-#   ZHAVA_TYPE : '/home/kang/workspace/lil-jvm/cmake-build-debug/java',
-    ZHAVA_TYPE : '/Users/connorkelleher/workspace-local/lil-jvm/cmake-build-debug/java',
+    ZHAVA_TYPE : '/home/kang/workspace/lil-jvm/release/java',
+#    ZHAVA_TYPE : '/Users/connorkelleher/workspace-local/lil-jvm/cmake-build-debug/java',
     JAVA_TYPE  : '/usr/bin/java',
 }
 
