@@ -49,6 +49,13 @@ value_t print_str_native(frame_t *f, int arg_count, value_t *args) {
     return BOOL_VAL(true);
 }
 
+value_t println_void_native(frame_t *f, int arg_count, value_t *args) {
+    (void) f;
+    (void) args;
+    (void) arg_count;
+    printf("\n");
+    return BOOL_VAL(true);
+}
 
 value_t println_bool_native(frame_t *f, int arg_count, value_t *args) {
     PRINT("%s\n", AS_BOOL(args[0]) ? "true" : "false");
@@ -57,7 +64,7 @@ value_t println_bool_native(frame_t *f, int arg_count, value_t *args) {
 
 
 value_t println_int_native(frame_t *f, int arg_count, value_t *args) {
-    PRINT("%d\n", AS_INT(args[0]));
+    PRINT("%d", AS_INT(args[0]));
     return BOOL_VAL(true);
 }
 
@@ -71,6 +78,7 @@ typedef enum native_method_t {
     PRINT_STR,
     PRINTLN_STR,
     PRINTLN_INT,
+    PRINTLN_VOID,
     PRINT_INT,
     PRINTLN_BOOL,
     NATIVE_METHOD_NONE
@@ -103,6 +111,13 @@ native_fn_info_t native_method_map[] = {
                 .method    = "println",
                 .desc      = "(Z)V",
                 .native_fn = println_bool_native,
+                .arity     = 1
+        },
+        [PRINTLN_VOID] = {
+                .class     = "java/io/PrintStream",
+                .method    = "println",
+                .desc      = "()V",
+                .native_fn = println_void_native,
                 .arity     = 1
         },
         [PRINTLN_INT] = {
