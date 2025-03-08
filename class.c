@@ -125,6 +125,20 @@ char *get_constant_tag_name(constant_tag_t tag) {
     return constant_tag_map[tag];
 }
 
+static char *value_tag_map[] = {
+        [VAL_BOOL] = "boolean",
+        [VAL_INT] = "int",
+        [VAL_LONG] = "long",
+        [VAL_FLOAT] = "float",
+        [VAL_DOUBLE] = "double",
+        [VAL_REF] = "reference",
+        [VAL_ADDR] = "address",
+};
+
+char *get_value_tag_name(value_type_t value_type) {
+    return value_tag_map[value_type];
+}
+
 void read_constant_pool(class_file_t *cf, uint16_t count, constant_pool_t **constant_pool) {
     constant_pool_t *cp = ALLOCATE(constant_pool_t, count);
     // constant pool count is number of entries PLUS ONE

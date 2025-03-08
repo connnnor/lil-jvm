@@ -17,9 +17,7 @@ typedef enum value_type_t {
     VAL_FLOAT,
     VAL_DOUBLE,
     VAL_REF,
-    VAL_ADDR,
-    // TODO reference
-    // TODO return address
+    VAL_ADDR
 } value_type_t;
 
 struct constant_pool_t;
@@ -520,6 +518,8 @@ constant_pool_t *get_constant_exp(class_file_t *cf, uint16_t index, constant_tag
 method_t *get_methodref(class_file_t *cf, uint16_t index);
 
 char *get_constant_tag_name(constant_tag_t tag);
+
+char *get_value_tag_name(value_type_t value_type);
 
 typedef struct reference_t {
     //constant_tag_t tag;

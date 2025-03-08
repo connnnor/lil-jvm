@@ -134,8 +134,8 @@ frame_t *push_frame(uint8_t *code, class_file_t *class_file, uint16_t max_stack,
 }
 
 int *pop_frame(frame_t *frame) {
-    FREE(value_t, frame->locals);
-    FREE(value_t, frame->stack);
+    FREE_ARRAY(value_t, frame->locals, frame->max_locals);
+    FREE_ARRAY(value_t, frame->stack, frame->max_stack);
     FREE(frame_t, frame);
 
     vm.frame_count--;
@@ -166,20 +166,19 @@ interpret_result_t run(void) {
     }                                                                   \
   } while (false)
 
-#define IF_CMP_LITERAL(AS_VAL_TYPE, IS_VAL_TYPE, type, op, literal)     \
-  do {                                                                  \
-    if (!IS_VAL_TYPE(peek(frame, 0))) {                                 \
-      runtime_error("Operands must be VAL_TYPE.");                      \
-      return INTERPRET_RUNTIME_ERROR;                                   \
-    }                                                                   \
-    type a = AS_VAL_TYPE(pop(frame));                                   \
-    bool succeeds = a op literal;                                       \
-    if (succeeds) {                                                     \
-        uint16_t offset = READ_SHORT();                                 \
-        frame->pc += offset;                                            \
-    }                                                                   \
-  } while (false)
+#define IS_VALUE_TYPE(value, value_type)  ((value).type == value_type)
 
+// pop value from stack, verify value type and store as local
+#define STORE_LOCAL(VAL_TYPE, index)                   \
+    do {                                               \
+    if (!IS_VALUE_TYPE(peek(frame, 0), VAL_TYPE)) {    \
+      runtime_error("Operand must be type %s.",        \
+        get_value_tag_name(VAL_TYPE));                 \
+      return INTERPRET_RUNTIME_ERROR;                  \
+    }                                                  \
+    value_t v = pop(frame);                            \
+    frame_store_local(frame, v, index);                \
+  } while (false)
 
     for (;;) {
         frame = vm.frames[vm.frame_count - 1];
@@ -238,6 +237,14 @@ interpret_result_t run(void) {
 //                return simple_inst("aload_0", offset);
 //            case OP_INVOKE_SPECIAL:
 //                return invoke_inst("invokespecial", code, offset);
+            case OP_ISTORE_0: // 0x3b,
+                STORE_LOCAL(VAL_INT, 0); break;
+            case OP_ISTORE_1: // 0x3c,
+                STORE_LOCAL(VAL_INT, 1); break;
+            case OP_ISTORE_2: // 0x3d,
+                STORE_LOCAL(VAL_INT, 2); break;
+            case OP_ISTORE_3: // 0x3e,
+                STORE_LOCAL(VAL_INT, 3); break;
             case OP_IRETURN: { // 0xac
                 // If no exception is thrown, value is popped from the operand stack of the current frame (§2.6)
                 // and pushed onto the operand stack of the frame of the invoker

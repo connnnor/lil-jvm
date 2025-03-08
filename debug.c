@@ -403,47 +403,33 @@ int disassemble_inst(class_file_t *cf, uint8_t *code, uint32_t offset, int inden
     printf("(0x%02x) ", opcode);
     switch(opcode) {
         case OP_NOP: // 0x00
-            return simple_inst(opcode, offset);
         case OP_ACONST_NULL: // 0x01
-            return simple_inst(opcode, offset);
         case OP_ICONST_0: // 0x03
-            return simple_inst(opcode, offset);
         case OP_ICONST_1: // 0x04
-            return simple_inst(opcode, offset);
         case OP_ICONST_2:
             return simple_inst(opcode, offset);
         case OP_BIPUSH: // 0x10
             return byte_immediate_inst(opcode, code, offset);
         case OP_LDC: // 0x12
-            return byte_index_inst(cf, opcode, code, offset);
         case OP_LLOAD: // 0x16
             return byte_index_inst(cf, opcode, code, offset);
         case OP_ALOAD_0:
-            return simple_inst(opcode, offset);
         case OP_ISTORE_0:
-            return simple_inst(opcode, offset);
         case OP_ISTORE_1:
-            return simple_inst(opcode, offset);
         case OP_ISTORE_2:
-            return simple_inst(opcode, offset);
         case OP_ISTORE_3:
             return simple_inst(opcode, offset);
         case OP_GETSTATIC:
-            return word_index_inst(cf, opcode, code, offset);
         case OP_INVOKEVIRTUAL:
-            return word_index_inst(cf, opcode, code, offset);
         case OP_INVOKESPECIAL:
-            return word_index_inst(cf, opcode, code, offset);
         case OP_INVOKESTATIC:
             return word_index_inst(cf, opcode, code, offset);
         case OP_ILOAD_0:
-            return simple_inst(opcode, offset);
         case OP_ILOAD_1:
             return simple_inst(opcode, offset);
         case OP_IINC: // 0x84
             return two_byte_value_inst(opcode, code, offset);
         case OP_IADD: // 0x60
-            return simple_inst(opcode, offset);
         case OP_INEG: // 0x74
             return simple_inst(opcode, offset);
         case OP_IFEQ: // 0x99
@@ -461,7 +447,6 @@ int disassemble_inst(class_file_t *cf, uint8_t *code, uint32_t offset, int inden
         case OP_GOTO: // 0xa7
             return branch_offset_inst(opcode, code, offset);
         case OP_IRETURN:
-            return simple_inst(opcode, offset);
         case OP_RETURN:
             return simple_inst(opcode, offset);
         default:
