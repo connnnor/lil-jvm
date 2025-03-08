@@ -115,6 +115,21 @@ uint16_t get_stack_size(frame_t *f) {
 //    return vm.stack_top[-1 - distance];
 //}
 
+// determine number of args from metod descriptor
+// e.g. (II)V has 2 args
+int get_nargs(char *desc) {
+    char *s = desc;
+    int i = 0;
+    if (*s != '(') {
+        runtime_error("expected description to begin with '(' but found %c", *s);
+    }
+    s++;
+    while(s[i] != ')') {
+        i++;
+    }
+    return i;
+}
+
 //frame_t *push_frame(frame_t *parent, uint8_t *code, class_file_t *class_file, uint16_t max_stack, uint16_t max_locals) {
 frame_t *push_frame(uint8_t *code, class_file_t *class_file, uint16_t max_stack, uint16_t max_locals) {
     frame_t *frame = ALLOCATE(frame_t, 1);
@@ -291,7 +306,10 @@ interpret_result_t run(void) {
                 attribute_t *attribute = get_attribute_by_tag(method->attribute_count, method->attributes, ATTR_CODE);
                 attr_code_t *code_attr = AS_ATTR_CODE(attribute);
                 frame_t *new_frame = push_frame(code_attr->code, frame->class_file, code_attr->max_stack, code_attr->max_locals);
+                // TODO - validate stack has nargs
+                // TODO - validate stack value's type matches expected type from desc
                 // pop nargs from current frames stack and push onto new frame's local variable table
+                int nargs = get_nargs(method_desc);
                 char *s = method_desc;
                 int i = 0;
                 if (*s != '(') {
@@ -299,7 +317,9 @@ interpret_result_t run(void) {
                 }
                 s++;
                 while(s[i] != ')') {
-                    frame_store_local(new_frame, pop(frame), i++);
+                    // order should match b/w stack & locals, so stack = [0, 1, 2] -> someMethod(0, 1, 2)
+                    frame_store_local(new_frame, pop(frame), nargs - i - 1);
+                    i++;
                 }
                 break;
             }
