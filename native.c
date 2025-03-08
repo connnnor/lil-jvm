@@ -64,7 +64,7 @@ value_t println_bool_native(frame_t *f, int arg_count, value_t *args) {
 
 
 value_t println_int_native(frame_t *f, int arg_count, value_t *args) {
-    PRINT("%d", AS_INT(args[0]));
+    PRINT("%d\n", AS_INT(args[0]));
     return BOOL_VAL(true);
 }
 
