@@ -334,6 +334,14 @@ interpret_result_t run(void) {
                 push(frame, INT_VAL(-a));
                 break;
             }
+            case OP_IINC: { // 0x84
+                uint8_t index = READ_BYTE();
+                int constant = READ_BYTE();
+                value_t v = frame_get_local(frame, index);
+                v.as.integer += constant;
+                frame_store_local(frame, v, index);
+                break;
+            }
             case OP_IFEQ: // 0x99
                 COMPARE_BRANCH(AS_INT(pop(frame)), 0, ==); break;
             case OP_IFNE: // 0x9a
