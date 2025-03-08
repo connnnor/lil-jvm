@@ -191,7 +191,7 @@ def test_short_circuit(java_type):
         true
         """)
 
-def test_comparison_operators_gt(java_type):
+def test_comparison_operators_int_gt(java_type):
     runDocTest(java_type, "ComparisonOperatorsGt", """
         >>> public class ComparisonOperatorsGt {
         ...     static void greaterThan(int a, int b) {
@@ -210,7 +210,7 @@ def test_comparison_operators_gt(java_type):
         true
         """)
 
-def test_comparison_operators_gt_eq(java_type):
+def test_comparison_operators_int_gt_eq(java_type):
     runDocTest(java_type, "ComparisonOperatorsGtEq", """
                >>> public class ComparisonOperatorsGtEq {
         ...     static void greaterThanOrEqualTo(int a, int b) {
@@ -229,7 +229,7 @@ def test_comparison_operators_gt_eq(java_type):
         true
         """)
 
-def test_comparison_operators_lt(java_type):
+def test_comparison_operators_int_lt(java_type):
     runDocTest(java_type, "ComparisonOperatorsLt", """
         >>> public class ComparisonOperatorsLt {
         ...     static void lessThan(int a, int b) {
@@ -248,7 +248,7 @@ def test_comparison_operators_lt(java_type):
         false
         """)
 
-def test_comparison_operators_lt_eq(java_type):
+def test_comparison_operators_int_lt_eq(java_type):
     runDocTest(java_type, "ComparisonOperatorsLtEq", """
         >>> public class ComparisonOperatorsLtEq {
         ...     static void lessThanOrEqualTo(int a, int b) {
@@ -267,7 +267,7 @@ def test_comparison_operators_lt_eq(java_type):
         false
         """)
 
-def test_comparison_operators_eq(java_type):
+def test_comparison_operators_int_eq(java_type):
     runDocTest(java_type, "ComparisonOperatorsEq", """
         >>> public class ComparisonOperatorsEq {
         ...     static void equalTo(int a, int b) {
@@ -285,7 +285,7 @@ def test_comparison_operators_eq(java_type):
         false 
         """)
 
-def test_comparison_operators_not_eq(java_type):
+def test_comparison_operators_int_not_eq(java_type):
     runDocTest(java_type, "ComparisonOperatorsNotEq", """
         >>> public class ComparisonOperatorsNotEq {
         ...     static void notEqualTo(int a, int b) {
@@ -307,88 +307,6 @@ def test_comparison_operators_not_eq(java_type):
         50 != 77 -> true
         """)
 
-
-#def test_comparison_operators(java_type):
-#    runDocTest(java_type, "ComparisonOperators", """
-#
-#        >>> public class ComparisonOperators {
-#        ...     static void greaterThan(int a, int b) {
-#        ...         System.out.println(a > b);
-#        ...     }
-#        ... 
-#        ...     static void greaterThanOrEqualTo(int a, int b) {
-#        ...         System.out.println(a >= b);
-#        ...     }
-#        ... 
-#        ...     static void lessThan(int a, int b) {
-#        ...         System.out.println(a < b);
-#        ...     }
-#        ... 
-#        ...     static void lessThanOrEqualTo(int a, int b) {
-#        ...         System.out.println(a <= b);
-#        ...     }
-#        ... 
-#        ...     static void equalTo(int a, int b) {
-#        ...         System.out.println(a == b);
-#        ...     }
-#        ... 
-#        ...     static void notEqualTo(int a, int b) {
-#        ...         System.out.println(a != b);
-#        ...     }
-#        ... 
-#        ...     public static void main(String[] args){
-#        ...         System.out.println("GreaterThan");
-#        ...         greaterThan(0, 1);
-#        ...         greaterThan(1, 1);
-#        ...         greaterThan(2, 1);
-#        ... 
-#        ...         System.out.println("GreaterThanOrEqualTo");
-#        ...         greaterThanOrEqualTo(0, 1);
-#        ...         greaterThanOrEqualTo(1, 1);
-#        ...         greaterThanOrEqualTo(2, 1);
-#        ... 
-#        ...         System.out.println("LessThan");
-#        ...         lessThan(0, 1);
-#        ...         lessThan(1, 1);
-#        ...         lessThan(2, 1);
-#        ... 
-#        ...         System.out.println("LessThanOrEqualTo");
-#        ...         lessThanOrEqualTo(0, 1);
-#        ...         lessThanOrEqualTo(1, 1);
-#        ...         lessThanOrEqualTo(2, 1);
-#        ... 
-#        ...         System.out.println("EqualTo");
-#        ...         equalTo(1, 1);
-#        ...         equalTo(0, 1);
-#        ... 
-#        ...         System.out.println("NotEqualTo");
-#        ...         notEqualTo(1, 1);
-#        ...         notEqualTo(0, 1);
-#        ...     }
-#        ... }
-#        GreaterThan
-#        false
-#        false
-#        true
-#        GreaterThanOrEqualTo
-#        false
-#        true
-#        true
-#        LessThan
-#        true
-#        false
-#        false
-#        LessThanOrEqualTo
-#        true
-#        true
-#        false
-#        EqualTo
-#        true
-#        false 
-#        NotEqualTo
-#        false
-#        true
-#        """)
 
 @pytest.mark.loop
 def test_while(java_type):
@@ -454,4 +372,63 @@ def test_jumping_if_else(java_type):
         printPositiveOrNegative -1 negative
         printPositive -1
         printPositive 1 positive
+        """)
+
+
+def test_class_method(java_type):
+    # if-else (then branch)
+    runDocTest(java_type, "ClassMethod", """
+        >>> public class ClassMethod {
+        ...     public static class Person {
+        ...         String name;
+        ...         int age;
+        ...         public Person(String name, int age) {
+        ...             this.name = name;
+        ...             this.age = age;
+        ...         }
+        ...         public void display() {
+        ...             System.out.println("Name: " + name + ", Age: " + age);
+        ...         }
+        ...     }
+        ...     public static void main(String[] args){
+        ...         Person p = new Person("Xiao Kang", 31);
+        ...         p.display();
+        ...     }
+        ... }
+        Name: Xiao Kang, Age: 31
+        """)
+
+def test_inheritance(java_type):
+    # if-else (then branch)
+    runDocTest(java_type, "Inheritance", """
+        >>> public class Inheritance {
+        ...     public static class A {
+        ...         public void method1() {
+        ...             System.out.println("Class A method");
+        ...         }
+        ...     }
+        ...     public static class B extends A {
+        ...         public void method2() {
+        ...             System.out.println("Class B method");
+        ...         }
+        ...     }
+        ...     public static class C extends A {
+        ...         public void method1() {
+        ...             System.out.println("Class C method");
+        ...         }
+        ...     }
+        ...     public static void main(String[] args){
+        ...         A a = new A();
+        ...         a.method1();
+        ...         B b = new B();
+        ...         b.method1();
+        ...         b.method2();
+        ...         C c = new C();
+        ...         c.method1();
+        ...     }
+        ... }
+        Class A method
+        Class A method
+        Class B method
+        Class C method
         """)
