@@ -191,87 +191,204 @@ def test_short_circuit(java_type):
         true
         """)
 
-def test_comparison_operators(java_type):
-    runDocTest(java_type, "ComparisonOperators", """
-
-        >>> public class ComparisonOperators {
+def test_comparison_operators_gt(java_type):
+    runDocTest(java_type, "ComparisonOperatorsGt", """
+        >>> public class ComparisonOperatorsGt {
         ...     static void greaterThan(int a, int b) {
         ...         System.out.println(a > b);
         ...     }
-        ... 
-        ...     static void greaterThanOrEqualTo(int a, int b) {
-        ...         System.out.println(a >= b);
-        ...     }
-        ... 
-        ...     static void lessThan(int a, int b) {
-        ...         System.out.println(a < b);
-        ...     }
-        ... 
-        ...     static void lessThanOrEqualTo(int a, int b) {
-        ...         System.out.println(a <= b);
-        ...     }
-        ... 
-        ...     static void equalTo(int a, int b) {
-        ...         System.out.println(a == b);
-        ...     }
-        ... 
-        ...     static void notEqualTo(int a, int b) {
-        ...         System.out.println(a != b);
-        ...     }
-        ... 
         ...     public static void main(String[] args){
         ...         System.out.println("GreaterThan");
         ...         greaterThan(0, 1);
         ...         greaterThan(1, 1);
         ...         greaterThan(2, 1);
-        ... 
-        ...         System.out.println("GreaterThanOrEqualTo");
-        ...         greaterThanOrEqualTo(0, 1);
-        ...         greaterThanOrEqualTo(1, 1);
-        ...         greaterThanOrEqualTo(2, 1);
-        ... 
-        ...         System.out.println("LessThan");
-        ...         lessThan(0, 1);
-        ...         lessThan(1, 1);
-        ...         lessThan(2, 1);
-        ... 
-        ...         System.out.println("LessThanOrEqualTo");
-        ...         lessThanOrEqualTo(0, 1);
-        ...         lessThanOrEqualTo(1, 1);
-        ...         lessThanOrEqualTo(2, 1);
-        ... 
-        ...         System.out.println("EqualTo");
-        ...         equalTo(1, 1);
-        ...         equalTo(0, 1);
-        ... 
-        ...         System.out.println("NotEqualTo");
-        ...         notEqualTo(1, 1);
-        ...         notEqualTo(0, 1);
         ...     }
         ... }
         GreaterThan
         false
         false
         true
+        """)
+
+def test_comparison_operators_gt_eq(java_type):
+    runDocTest(java_type, "ComparisonOperatorsGtEq", """
+               >>> public class ComparisonOperatorsGtEq {
+        ...     static void greaterThanOrEqualTo(int a, int b) {
+        ...         System.out.println(a >= b);
+        ...     }
+        ...     public static void main(String[] args){
+        ...         System.out.println("GreaterThanOrEqualTo");
+        ...         greaterThanOrEqualTo(0, 1);
+        ...         greaterThanOrEqualTo(1, 1);
+        ...         greaterThanOrEqualTo(2, 1);
+        ...     }
+        ... }
         GreaterThanOrEqualTo
         false
         true
         true
+        """)
+
+def test_comparison_operators_lt(java_type):
+    runDocTest(java_type, "ComparisonOperatorsLt", """
+        >>> public class ComparisonOperatorsLt {
+        ...     static void lessThan(int a, int b) {
+        ...         System.out.println(a < b);
+        ...     }
+        ...     public static void main(String[] args){
+        ...         System.out.println("LessThan");
+        ...         lessThan(0, 1);
+        ...         lessThan(1, 1);
+        ...         lessThan(2, 1);
+        ...     }
+        ... }
         LessThan
         true
         false
         false
+        """)
+
+def test_comparison_operators_lt_eq(java_type):
+    runDocTest(java_type, "ComparisonOperatorsLtEq", """
+        >>> public class ComparisonOperatorsLtEq {
+        ...     static void lessThanOrEqualTo(int a, int b) {
+        ...         System.out.println(a <= b);
+        ...     }
+        ...     public static void main(String[] args){
+        ...         System.out.println("LessThanOrEqualTo");
+        ...         lessThanOrEqualTo(0, 1);
+        ...         lessThanOrEqualTo(1, 1);
+        ...         lessThanOrEqualTo(2, 1);
+        ...     }
+        ... }
         LessThanOrEqualTo
         true
         true
         false
+        """)
+
+def test_comparison_operators_eq(java_type):
+    runDocTest(java_type, "ComparisonOperatorsEq", """
+        >>> public class ComparisonOperatorsEq {
+        ...     static void equalTo(int a, int b) {
+        ...         System.out.println(a == b);
+        ...     }
+        ... 
+        ...     public static void main(String[] args){
+        ...         System.out.println("EqualTo");
+        ...         equalTo(1, 1);
+        ...         equalTo(0, 1);
+        ...     }
+        ... }
         EqualTo
         true
         false 
-        NotEqualTo
-        false
-        true
         """)
+
+def test_comparison_operators_not_eq(java_type):
+    runDocTest(java_type, "ComparisonOperatorsNotEq", """
+        >>> public class ComparisonOperatorsNotEq {
+        ...     static void notEqualTo(int a, int b) {
+        ...         System.out.print(a);
+        ...         System.out.print(" != ");
+        ...         System.out.print(b);
+        ...         System.out.print(" -> ");
+        ...         System.out.println(a != b);
+        ...     }
+        ... 
+        ...     public static void main(String[] args){
+        ...         System.out.println("NotEqualTo");
+        ...         notEqualTo(50, 50);
+        ...         notEqualTo(50, 77);
+        ...     }
+        ... }
+        NotEqualTo
+        50 != 50 -> false
+        50 != 77 -> true
+        """)
+
+
+#def test_comparison_operators(java_type):
+#    runDocTest(java_type, "ComparisonOperators", """
+#
+#        >>> public class ComparisonOperators {
+#        ...     static void greaterThan(int a, int b) {
+#        ...         System.out.println(a > b);
+#        ...     }
+#        ... 
+#        ...     static void greaterThanOrEqualTo(int a, int b) {
+#        ...         System.out.println(a >= b);
+#        ...     }
+#        ... 
+#        ...     static void lessThan(int a, int b) {
+#        ...         System.out.println(a < b);
+#        ...     }
+#        ... 
+#        ...     static void lessThanOrEqualTo(int a, int b) {
+#        ...         System.out.println(a <= b);
+#        ...     }
+#        ... 
+#        ...     static void equalTo(int a, int b) {
+#        ...         System.out.println(a == b);
+#        ...     }
+#        ... 
+#        ...     static void notEqualTo(int a, int b) {
+#        ...         System.out.println(a != b);
+#        ...     }
+#        ... 
+#        ...     public static void main(String[] args){
+#        ...         System.out.println("GreaterThan");
+#        ...         greaterThan(0, 1);
+#        ...         greaterThan(1, 1);
+#        ...         greaterThan(2, 1);
+#        ... 
+#        ...         System.out.println("GreaterThanOrEqualTo");
+#        ...         greaterThanOrEqualTo(0, 1);
+#        ...         greaterThanOrEqualTo(1, 1);
+#        ...         greaterThanOrEqualTo(2, 1);
+#        ... 
+#        ...         System.out.println("LessThan");
+#        ...         lessThan(0, 1);
+#        ...         lessThan(1, 1);
+#        ...         lessThan(2, 1);
+#        ... 
+#        ...         System.out.println("LessThanOrEqualTo");
+#        ...         lessThanOrEqualTo(0, 1);
+#        ...         lessThanOrEqualTo(1, 1);
+#        ...         lessThanOrEqualTo(2, 1);
+#        ... 
+#        ...         System.out.println("EqualTo");
+#        ...         equalTo(1, 1);
+#        ...         equalTo(0, 1);
+#        ... 
+#        ...         System.out.println("NotEqualTo");
+#        ...         notEqualTo(1, 1);
+#        ...         notEqualTo(0, 1);
+#        ...     }
+#        ... }
+#        GreaterThan
+#        false
+#        false
+#        true
+#        GreaterThanOrEqualTo
+#        false
+#        true
+#        true
+#        LessThan
+#        true
+#        false
+#        false
+#        LessThanOrEqualTo
+#        true
+#        true
+#        false
+#        EqualTo
+#        true
+#        false 
+#        NotEqualTo
+#        false
+#        true
+#        """)
 
 @pytest.mark.loop
 def test_while(java_type):

@@ -181,6 +181,7 @@ interpret_result_t run(void) {
 #define READ_SHORT() \
    (frame->pc += 2, \
    (uint16_t) ((frame->code[frame->pc - 2] << 8) | frame->code[frame->pc - 1]))
+
 #define COMPARE_BRANCH(a, b, op)                     \
   do {                                               \
     bool succeeds = a op b;                          \
@@ -208,6 +209,7 @@ interpret_result_t run(void) {
         frame = vm.frames[vm.frame_count - 1];
 #ifdef DEBUG_TRACE_EXECUTION
         printf("\n");
+        // TODO print ClassName:MethodName(SoureFile.java:LineNumber)
         printf("    # Frames = %d", vm.frame_count);
         printf("    Stack ");
     for (value_t *slot = frame->stack; slot < frame->stack_top; slot++) {
@@ -285,7 +287,6 @@ interpret_result_t run(void) {
                 uint16_t index = READ_SHORT();
 //                constant_pool_t *constant = get_constant_exp(frame->class_file, index, CONSTANT_FIELDREF);
                 (void) index;
-                // for now just do nothing
                 break;
             }
             case OP_INVOKEVIRTUAL:  // 0xb6
@@ -416,7 +417,7 @@ interpret_result_t interpret(class_file_t *class) {
         runtime_error("error cannot find main method\n");
     }
 
-    attr_code_t *code_attr = get_attribute_by_tag(main->attribute_count, main->attributes, ATTR_CODE)->info.attr_code;
+    attr_code_t *code_attr = AS_ATTR_CODE(get_attribute_by_tag(main->attribute_count, main->attributes, ATTR_CODE));
     push_frame(code_attr->code, class, code_attr->max_stack, code_attr->max_locals);
     return run();
 }
