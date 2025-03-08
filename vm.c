@@ -32,15 +32,6 @@ void runtime_error(const char * format, ...) {
     exit(-1);
 }
 
-void call_native(frame_t *frame, native_fn_info_t *fn_info) {
-//    if (native_fn_info->arity != arg_count) {
-//        runtime_error("Expected %d arguments but got %d.",
-//                      native_fn_info->arity, arg_count);
-//    }
-    native_fn_t native_fn = fn_info->native_fn;
-    (*native_fn)(frame, fn_info->arity, frame->stack_top - fn_info->arity);
-}
-
 // put value in frame's local variable table at index i
 void frame_store_local(frame_t *f, value_t v, int i) {
     f->locals[i] = v;
@@ -88,11 +79,6 @@ void print_value(frame_t *f, value_t value) {
     }
 }
 
-void push(frame_t *f, value_t v) {
-    *(f->stack_top) = v;
-    f->stack_top++;
-}
-
 value_t pop(frame_t *f) {
     f->stack_top--;
     return *(f->stack_top);
@@ -109,6 +95,29 @@ value_t peek(frame_t *f, int distance) {
 
 uint16_t get_stack_size(frame_t *f) {
     return f->stack_top - f->stack;
+}
+
+void push(frame_t *f, value_t v) {
+    int stacksize = get_stack_size(f);
+    if (stacksize == f->max_stack) {
+        runtime_error("attempting to push value onto full stack.");
+    }
+    *(f->stack_top) = v;
+    f->stack_top++;
+}
+
+void call_native(frame_t *frame, native_fn_info_t *fn_info) {
+//    if (native_fn_info->arity != arg_count) {
+//        runtime_error("Expected %d arguments but got %d.",
+//                      native_fn_info->arity, arg_count);
+//    }
+    native_fn_t native_fn = fn_info->native_fn;
+    (*native_fn)(frame, fn_info->arity, frame->stack_top - fn_info->arity);
+    int i = 0;
+    while(i < fn_info->arity) {
+        pop(frame);
+        i++;
+    }
 }
 
 //static value_t peek(int distance) {
