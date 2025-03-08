@@ -173,12 +173,12 @@ interpret_result_t run(void) {
    (frame->pc += 2, \
    (uint16_t) ((frame->code[frame->pc - 2] << 8) | frame->code[frame->pc - 1]))
 #define COMPARE_BRANCH(a, b, op)                     \
-  do {                                                                  \
-    bool succeeds = a op b;                                             \
-    int16_t offset = READ_SHORT();                                     \
-    if (succeeds) {                                                     \
-        frame->pc += offset - 3;                                        \
-    }                                                                   \
+  do {                                               \
+    bool succeeds = a op b;                          \
+    int16_t offset = READ_SHORT();                   \
+    if (succeeds) {                                  \
+        frame->pc += offset - 3;                     \
+    }                                                \
   } while (false)
 
 #define IS_VALUE_TYPE(value, value_type)  ((value).type == value_type)
@@ -346,18 +346,38 @@ interpret_result_t run(void) {
                 COMPARE_BRANCH(AS_INT(pop(frame)), 0, >); break;
             case OP_IFLE: // 0x9e
                 COMPARE_BRANCH(AS_INT(pop(frame)), 0, <=); break;
-            case OP_IF_ICMPEQ: // 0x9f
-                COMPARE_BRANCH(AS_INT(pop(frame)), AS_INT(pop(frame)), ==); break;
-            case OP_IF_ICMPNE: // 0xa0
-                COMPARE_BRANCH(AS_INT(pop(frame)), AS_INT(pop(frame)), !=); break;
-            case OP_IF_ICMPLT: // 0xa1
-                COMPARE_BRANCH(AS_INT(pop(frame)), AS_INT(pop(frame)), <); break;
-            case OP_IF_ICMPGE: // 0xa2
-                COMPARE_BRANCH(AS_INT(pop(frame)), AS_INT(pop(frame)), >=); break;
-            case OP_IF_ICMPGT: // 0xa3
-                COMPARE_BRANCH(AS_INT(pop(frame)), AS_INT(pop(frame)), >); break;
-            case OP_IF_ICMPLE: // 0xa4
-                COMPARE_BRANCH(AS_INT(pop(frame)), AS_INT(pop(frame)), <=); break;
+            case OP_IF_ICMPEQ: { // 0x9f
+                COMPARE_BRANCH(AS_INT(pop(frame)), AS_INT(pop(frame)), ==);
+                break;
+            }
+            case OP_IF_ICMPNE: { // 0xa0
+                COMPARE_BRANCH(AS_INT(pop(frame)), AS_INT(pop(frame)), !=);
+                break;
+            }
+            case OP_IF_ICMPLT: { // 0xa1
+                value_t a = pop(frame);
+                value_t b = pop(frame);
+                COMPARE_BRANCH(AS_INT(b), AS_INT(a), <);
+                break;
+            }
+            case OP_IF_ICMPGE: { // 0xa2
+                value_t a = pop(frame);
+                value_t b = pop(frame);
+                COMPARE_BRANCH(AS_INT(b), AS_INT(a), >=);
+                break;
+            }
+            case OP_IF_ICMPGT: { // 0xa3
+                value_t a = pop(frame);
+                value_t b = pop(frame);
+                COMPARE_BRANCH(AS_INT(b), AS_INT(a), >);
+                break;
+            }
+            case OP_IF_ICMPLE: { // 0xa4
+                value_t a = pop(frame);
+                value_t b = pop(frame);
+                COMPARE_BRANCH(AS_INT(b), AS_INT(a), <=);
+                break;
+            }
             case OP_GOTO: // 0xa4
                 COMPARE_BRANCH(true, true, ==); break; // always branch
             default:
