@@ -352,7 +352,7 @@ interpret_result_t interpret(class_file_t *class) {
         runtime_error("error cannot find main method\n");
     }
 
-    attribute_t *code_attr = get_attribute_by_tag(main->attribute_count, main->attributes, ATTR_CODE);
-    push_frame(code_attr->info.attr_code->code, class, 2, 1);
+    attr_code_t *code_attr = get_attribute_by_tag(main->attribute_count, main->attributes, ATTR_CODE)->info.attr_code;
+    push_frame(code_attr->code, class, code_attr->max_stack, code_attr->max_locals);
     return run();
 }
