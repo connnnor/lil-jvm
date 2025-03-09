@@ -191,6 +191,13 @@ interpret_result_t run(void) {
     }                                                \
   } while (false)
 
+#define BINARY_OP(type, as, to, op)    \
+  do {                                 \
+    type b = as(pop(frame));           \
+    type a = as(pop(frame));           \
+    push(frame, to(a op b));           \
+  } while (false)
+
 #define IS_VALUE_TYPE(value, value_type)  ((value).type == value_type)
 
 // pop value from stack, verify value type and store as local
@@ -334,10 +341,10 @@ interpret_result_t run(void) {
                 break;
             }
             case OP_IADD: { // 0x60
-                int a = AS_INT(pop(frame));
-                int b = AS_INT(pop(frame));
-                push(frame, INT_VAL(a + b));
-                break;
+                BINARY_OP(int, AS_INT, INT_VAL, +); break;
+            }
+            case OP_ISUB: { // 0x64
+                BINARY_OP(int, AS_INT, INT_VAL, -); break;
             }
             case OP_INEG: { // 0x74
                 int a = AS_INT(pop(frame));

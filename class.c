@@ -241,6 +241,15 @@ attr_stack_map_table_t *read_attribute_stack_map_table(class_file_t *cf, uint32_
     current += size - 2;
     return a;
 }
+attr_nestmembers_t *read_attribute_nestmembers(class_file_t *cf) {
+    (void) cf;
+    attr_nestmembers_t *a = ALLOCATE(attr_nestmembers_t, 1);
+    read_bytes(&a->number_of_classes, 2);
+    a->classes = ALLOCATE(uint16_t, a->number_of_classes);
+    memcpy(a->classes, current, sizeof(uint16_t) * a->number_of_classes);
+    current += sizeof(uint16_t) * a->number_of_classes;
+    return a;
+}
 
 attr_code_t *read_attribute_code(class_file_t *cf) {
     attr_code_t *a = ALLOCATE(attr_code_t, 1);
@@ -304,12 +313,15 @@ void read_attributes(class_file_t *cf, uint16_t count, attribute_t **attributes)
             case ATTR_SOURCE_FILE:
                 a[i].info.attr_source_file = read_attribute_source_file();
                 break;
+            case ATTR_NEST_MEMBERS:
+                a[i].info.attr_nestmembers = read_attribute_nestmembers(cf);
+                break;
             case ATTR_STACK_MAP_TABLE:
                 a[i].info.attr_stack_map_table = read_attribute_stack_map_table(cf, a[i].attribute_length);
                 break;
             case ATTR_UNKNOWN:
             default:
-                parse_error(cf, "Error: Unknown attribute tag 0x%02d for constant pool entry %d (%s)", a->tag, i + 1, get_attribute_name(a->tag));
+                parse_error(cf, "Error: Unknown attribute tag 0x%02d for attribute entry %d (%s)", a->tag, i + 1, get_attribute_name(a->tag));
         }
        // copy info byte array
        // a[i].in

@@ -430,6 +430,7 @@ int disassemble_inst(class_file_t *cf, uint8_t *code, uint32_t offset, int inden
         case OP_IINC: // 0x84
             return two_byte_value_inst(opcode, code, offset);
         case OP_IADD: // 0x60
+        case OP_ISUB: // 0x64
         case OP_INEG: // 0x74
             return simple_inst(opcode, offset);
         case OP_IFEQ: // 0x99
@@ -489,6 +490,16 @@ void dump_attr_source_file(class_file_t *cf, attribute_t *attr, int indent_level
            get_constant_utf8(cf, source_attr->sourcefile_index));
 }
 
+void dump_attr_nestmembers(class_file_t *cf, attribute_t *attr, int indent_level) {
+    attr_nestmembers_t *nestmembers = attr->info.attr_nestmembers;
+    printf("%*sNestmembers Attribute :\n", (indent_level + 0) * 2, "");
+    dump_attribute_common(cf, attr, indent_level + 1);
+    for (int i = 0; i < nestmembers->number_of_classes; i++) {
+        uint16_t index = nestmembers->classes[i];
+        print_constant_info_at(cf, index);
+    }
+}
+
 void dump_attr_line_num_table(attribute_t *attr, int indent_level) {
     printf("%*sLine Number Table :\n", indent_level * 2, "");
     //dump_attribute_common(cf, attr, indent_level + 1);
@@ -514,6 +525,9 @@ void dump_attributes(class_file_t *class_file, uint16_t count, attribute_t *attr
             case ATTR_SOURCE_FILE:
                 dump_attr_source_file(class_file, &attributes[i], indent_level + 1);
                 break;
+            case ATTR_NEST_MEMBERS:
+                dump_attr_nestmembers(class_file, &attributes[i], indent_level + 1);
+                break;
             case ATTR_UNKNOWN:
             default:
                 printf("%*s%-20s = 0x%04x\n", (indent_level + 1) * 2, "", "Unknown Attribute", attributes[i].tag);
@@ -522,12 +536,40 @@ void dump_attributes(class_file_t *class_file, uint16_t count, attribute_t *attr
     }
 }
 
+
+static char *access_flags_map[] = {
+        [ACC_PUBLIC]     = "ACC_PUBLIC",
+        [ACC_PRIVATE]    = "ACC_PRIVATE",
+        [ACC_FINAL]      = "ACC_FINAL",
+        [ACC_SUPER]      = "ACC_SUPER",
+        [ACC_INTERFACE]  = "ACC_INTERFACE",
+        [ACC_ABSTRACT]   = "ACC_ABSTRACT",
+        [ACC_SYNTHETIC]  = "ACC_SYNTHETIC",
+        [ACC_ANNOTATION] = "ACC_ANNOTATION",
+        [ACC_ENUM]       = "ACC_ENUM",
+        [ACC_MODULE]     = "ACC_MODULE",
+};
+
+char *get_access_flag_str(access_flags_t flag) {
+    return access_flags_map[flag];
+}
+
+void dump_access_flags(uint16_t access_flags) {
+    printf("    %-20s = (0x%04x) ", "Access Flags", access_flags);
+    if (access_flags & ACC_PUBLIC)    { printf("ACC_PUBLIC, "); }
+    if (access_flags & ACC_PRIVATE)   { printf("ACC_PRIVATE, "); }
+    if (access_flags & ACC_PROTECTED) { printf("ACC_PROTECTED, "); }
+    if (access_flags & ACC_STATIC)    { printf("ACC_STATIC, "); }
+    if (access_flags & ACC_FINAL)     { printf("ACC_FINAL, "); }
+    printf("\n");
+}
+
 void dump_methods(class_file_t *class_file, uint16_t count, method_t *methods) {
     //class_file_t *class_file;
     printf("Methods : %u\n", count);
     for (uint16_t i = 0; i < count; i++) {
         printf("  Method[%u]:\n", i);
-        printf("    %-20s = 0x%04x\n", "Access Flags",     methods[i].access_flags);
+        dump_access_flags(methods[i].access_flags);
         printf("    %-20s = 0x%04x // %s\n", "Name Index", methods[i].name_index,
                get_constant_utf8(class_file, methods[i].name_index));
 //        printf("    %-20s = 0x%04x // %s\n", "Descriptor Index", methods[i].descriptor_index,

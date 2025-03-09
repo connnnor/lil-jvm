@@ -404,6 +404,11 @@ typedef struct attr_line_number_table_t {
     line_number_table_t *line_number_table;
 } attr_line_number_table_t;
 
+typedef struct attr_nestmembers_t {
+    uint16_t number_of_classes;
+    uint16_t* classes; // constant pool index. must point to constant_Class_info structure
+} attr_nestmembers_t;
+
 // attribute length refers to length in BYTES of info
 typedef struct attribute_t {
     attribute_tag_t tag;
@@ -416,6 +421,7 @@ typedef struct attribute_t {
         attr_source_file_t *attr_source_file;
         attr_line_number_table_t *attr_line_number_table;
         attr_stack_map_table_t *attr_stack_map_table;
+        attr_nestmembers_t *attr_nestmembers;
     } info;
 } attribute_t;
 
@@ -447,6 +453,9 @@ typedef struct field_t {
 typedef enum access_flags_t {
     ACC_FLAG_MIN,
     ACC_PUBLIC     = 0x0001,
+    ACC_PRIVATE    = 0x0002,
+    ACC_PROTECTED  = 0x0004,
+    ACC_STATIC     = 0x0008,
     ACC_FINAL      = 0x0010,
     ACC_SUPER      = 0x0020,
     ACC_INTERFACE  = 0x0200,
@@ -461,18 +470,6 @@ typedef enum access_flags_t {
 // eehhhh i want to map these to messages but it's kludgy because
 // the enum values are like 0, 1, 2, 4, 8, etc. instead of continguous
 // array values like 0, 1, 2, 3, 4, 5
-//static char *access_flags_map[] = {
-//        [ACC_PUBLIC]     = "ACC_PUBLIC",
-//        [ACC_FINAL]      = "ACC_FINAL",
-//        [ACC_SUPER]      = "ACC_SUPER",
-//        [ACC_INTERFACE]  = "ACC_INTERFACE",
-//        [ACC_ABSTRACT]   = "ACC_ABSTRACT",
-//        [ACC_SYNTHETIC]  = "ACC_SYNTHETIC",
-//        [ACC_ANNOTATION] = "ACC_ANNOTATION",
-//        [ACC_ENUM]       = "ACC_ENUM",
-//        [ACC_MODULE]     = "ACC_MODULE",
-//};
-
 // https://docs.oracle.com/javase/specs/jvms/se14/html/jvms-4.html
 // 4.1. The ClassFile Structure
 

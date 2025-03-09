@@ -432,3 +432,22 @@ def test_inheritance(java_type):
         Class B method
         Class C method
         """)
+
+def test_fibonacci(java_type):
+    # if-else (then branch)
+    runDocTest(java_type, "Fibonacci", """
+        >>> public class Fibonacci {
+        ...     static int fibonacci(int n) {
+        ...         if (n <= 1) {
+        ...             return n;
+        ...         }
+        ...         return fibonacci(n - 1) + fibonacci(n - 2);
+        ...     }
+        ...
+        ...     public static void main(String[] args){
+        ...         int fibN = fibonacci(9);
+        ...         System.out.println(fibN);
+        ...     }
+        ... }
+        34 
+        """)
