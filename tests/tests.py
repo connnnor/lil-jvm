@@ -451,3 +451,28 @@ def test_fibonacci(java_type):
         ... }
         34 
         """)
+
+def test_clinit(java_type):
+    # Class Init <clinit> method
+    runDocTest(java_type, "ClassInit", """
+        >>> class ClassInit {
+        ... 
+        ...     static String str = "string";
+        ...     static int one = 1;
+        ...     static int two;
+        ... 
+        ...     static {
+        ...         two = 2;
+        ...     }
+        ... 
+        ...     public static void main(String[] args){
+        ...         System.out.println(str);
+        ...         System.out.println(one);
+        ...         System.out.println(two);
+        ...     }
+        ... 
+        ... }
+        string
+        1
+        2
+        """)
