@@ -185,9 +185,12 @@ Attributes : 1
 
 Each test specifies a piece of java source code and the expected output on stdout, then compiles it with `javac`, then executes the class file using the actual JVM (`/usr/bin/java`) and this project's jvm.
 
-To execute tests first setup a venv and install pytest, then you can run them like:
+To execute tests first setup a venv and install pytest, set environmental variables pointing to this java bin and the regular one, then you can run them like:
 
 ```sh
+# export env vars
+> export ZHAVA=/Users/user/workspace/lil-jvm/release/java
+> export JAVA=/usr/local/bin/java
 > cd tests
 > pytest tests.py
 ```
