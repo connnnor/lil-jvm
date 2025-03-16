@@ -53,13 +53,6 @@ void dump_interfaces(uint16_t count, interface_t *interfaces) {
     }
 }
 
-void dump_fields(uint16_t count, field_t *fields) {
-    printf("Fields : %u\n", count);
-    if (fields == NULL) {
-        ;
-    }
-}
-
 void dump_attributes(class_file_t *class_file, uint16_t count, attribute_t *attributes, int indent_level);
 
 
@@ -564,6 +557,19 @@ void dump_access_flags(uint16_t access_flags) {
     printf("\n");
 }
 
+void dump_fields(class_file_t *class_file, uint16_t count, field_t *fields) {
+    //class_file_t *class_file;
+    printf("Fields : %u\n", count);
+    for (uint16_t i = 0; i < count; i++) {
+        printf("  Field[%u]:\n", i);
+        dump_access_flags(fields[i].access_flags);
+        printf("    %-20s = 0x%04x // %s\n", "Name Index", fields[i].name_index,
+               get_constant_utf8(class_file, fields[i].name_index));
+        printf("    %-20s = 0x%04x\n", "Descriptor Index", fields[i].descriptor_index);
+        dump_attributes(class_file, fields[i].attribute_count, fields[i].attributes, 2);
+    }
+}
+
 void dump_methods(class_file_t *class_file, uint16_t count, method_t *methods) {
     //class_file_t *class_file;
     printf("Methods : %u\n", count);
@@ -572,8 +578,6 @@ void dump_methods(class_file_t *class_file, uint16_t count, method_t *methods) {
         dump_access_flags(methods[i].access_flags);
         printf("    %-20s = 0x%04x // %s\n", "Name Index", methods[i].name_index,
                get_constant_utf8(class_file, methods[i].name_index));
-//        printf("    %-20s = 0x%04x // %s\n", "Descriptor Index", methods[i].descriptor_index,
-//               get_constant_utf8(class_file, methods[i].descriptor_index));
         printf("    %-20s = 0x%04x\n", "Descriptor Index", methods[i].descriptor_index);
         dump_attributes(class_file, methods[i].attribute_count, methods[i].attributes, 2);
     }
@@ -588,7 +592,7 @@ void dump_classfile(class_file_t *class_file) {
     printf("%-25s 0x%04x // %s'\n", "This class", class_file->this_class, get_classname(class_file, class_file->this_class));
     printf("%-25s 0x%04x '\n", "Super class", class_file->super_class);
     dump_interfaces(class_file->interfaces_count, class_file->interfaces);
-    dump_fields(class_file->fields_count, class_file->fields);
+    dump_fields(class_file, class_file->fields_count, class_file->fields);
     dump_methods(class_file, class_file->methods_count, class_file->methods);
     dump_attributes(class_file, class_file->attributes_count, class_file->attributes, 0);
 }

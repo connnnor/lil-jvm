@@ -353,13 +353,20 @@ void read_interfaces(uint16_t count, interface_t *interfaces) {
     exit(-1);
 }
 
-void read_fields(uint16_t count, field_t *fields) {
+void read_fields(class_file_t *cf, uint16_t count, field_t **fields) {
     if (count == 0) {
         return;
     }
-    (void) fields; // suppress -Werror=unused-parameter
-    printf("TODO: read_fields\n");
-    exit(-1);
+    field_t *f = ALLOCATE(field_t, count);
+    for (uint16_t i = 0; i < count; i++) {
+        read_bytes(&f[i].access_flags, 2);
+        read_bytes(&f[i].name_index, 2);
+        debug_print("Processing Field %s\n", get_constant_utf8(cf, f[i].name_index));
+        read_bytes(&f[i].descriptor_index, 2);
+        read_bytes(&f[i].attribute_count, 2);
+        read_attributes(cf, f[i].attribute_count, &f[i].attributes);
+    }
+    *fields = f;
 }
 
 void read_methods(class_file_t *cf, uint16_t count, method_t **methods) {
@@ -395,7 +402,7 @@ void read_class_file(uint8_t *bytes, class_file_t *class_file) {
     read_bytes(&class_file->interfaces_count, 2);
     read_interfaces(class_file->interfaces_count, class_file->interfaces);
     read_bytes(&class_file->fields_count, 2);
-    read_fields(class_file->fields_count, class_file->fields);
+    read_fields(class_file, class_file->fields_count, &class_file->fields);
     read_bytes(&class_file->methods_count, 2);
     read_methods(class_file, class_file->methods_count, &class_file->methods);
     read_bytes(&class_file->attributes_count, 2);
